@@ -176,6 +176,7 @@ namespace WaypointsFree
             if (autoUpdatePosition)
             {
                 transform.position = waypointsList[ndx].GetPosition();
+
                 if(LookAtSpeed > 0)
                 {
                     if (StartTravelDirection == TravelDirection.REVERSE)
@@ -258,6 +259,8 @@ namespace WaypointsFree
                 {
                     nextPosition.y = transform.position.y;
                 }
+
+                nextPosition.y = positionOriginal.y;
 
                 ResetMovementValues();
             }

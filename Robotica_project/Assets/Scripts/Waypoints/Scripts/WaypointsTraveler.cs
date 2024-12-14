@@ -4,11 +4,6 @@ using UnityEngine;
 
 namespace WaypointsFree
 {
-
-    /// <summary>
-    /// Moves the gameobject through a series of waypoints
-    /// 
-    /// </summary>
     public class WaypointsTraveler : MonoBehaviour
     {
         [Tooltip("WaypointsGroup gameobject containing the waypoints to travel.")]
@@ -17,20 +12,15 @@ namespace WaypointsFree
         [Tooltip("Movement and look-at constraints.")]
         public PositionConstraint XYZConstraint = PositionConstraint.XYZ;
 
-
         [Tooltip("Auto-start movement if true.")]
         public bool AutoStart = false;
 
-        //[Range(0,float.MaxValue)]
         public float MoveSpeed = 5.0f;
-
-        //[Range(0, float.MaxValue)]
         public float LookAtSpeed = 3.0f;
 
         [Tooltip("Starts movement from the position vector at this index. Dependent upon StartTravelDirection!")]
         public int StartIndex = 0;
 
-        
         [Tooltip("Immediately move starting position to postion at StartIndex.")]
         public bool AutoPositionAtStart = true;
 
@@ -43,41 +33,36 @@ namespace WaypointsFree
         [Tooltip("Movement function type")]
         public MoveType StartingMovementType = MoveType.LERP;
 
+        public float DecelerationRate = 5.0f;
+        private float currentSpeed;
 
         public bool IsMoving
         {
-            get { return isMoving;  }
+            get { return isMoving; }
         }
 
-        delegate bool MovementFunction ();
+        delegate bool MovementFunction();
         MovementFunction moveFunc = null;
-        
 
+        int positionIndex = -1;
+        List<Waypoint> waypointsList;
 
-        int positionIndex = -1; // Index of the next waypoint to move toward
-        List<Waypoint> waypointsList; //Reference to the list of waypoints located in Waypoints 
-
-
-        Vector3 nextPosition; // The next position to travel to.
+        Vector3 nextPosition;
         Vector3 startPosition;
         Vector3 destinationPosition;
 
         float distanceToNextWaypoint;
-        float distanceTraveled = 0; 
+        float distanceTraveled = 0;
         float timeTraveled = 0;
 
         int travelIndexCounter = 1;
 
-        bool isMoving = false; // Movement on/off
-
-
+        bool isMoving = false;
 
         Vector3 positionOriginal;
         Quaternion rotationOriginal;
         float moveSpeedOriginal = 0;
         float lookAtSpeedOriginal = 0;
-
-
 
         public void ResetTraveler()
         {
@@ -87,7 +72,6 @@ namespace WaypointsFree
             MoveSpeed = moveSpeedOriginal;
             LookAtSpeed = lookAtSpeedOriginal;
 
-
             StartAtIndex(StartIndex, AutoPositionAtStart);
             SetNextPosition();
             travelIndexCounter = StartTravelDirection == TravelDirection.REVERSE ? -1 : 1;
@@ -96,10 +80,8 @@ namespace WaypointsFree
                 moveFunc = MoveLerpSimple;
             else if (StartingMovementType == MoveType.FORWARD_TRANSLATE)
                 moveFunc = MoveForwardToNext;
-
         }
 
-        // Start is called before the first frame update
         void Start()
         {
             moveSpeedOriginal = MoveSpeed;
@@ -108,10 +90,11 @@ namespace WaypointsFree
             positionOriginal = transform.position;
             rotationOriginal = transform.rotation;
 
+            currentSpeed = moveSpeedOriginal;
+
             ResetTraveler();
 
-            Move( AutoStart );
-
+            Move(AutoStart);
         }
 
         public void Move(bool tf)
@@ -127,45 +110,109 @@ namespace WaypointsFree
             }
         }
 
-        // Update is called once per frame
         void Update()
         {
-            if (isMoving == true && moveFunc != null)
+            if (CheckForPedestrians() || CheckForCars())
             {
-                bool arrivedAtDestination = false;
+                currentSpeed = Mathf.Max(0, currentSpeed - DecelerationRate * Time.deltaTime);
+            }
+            else
+            {
+                currentSpeed = Mathf.Min(moveSpeedOriginal, currentSpeed + DecelerationRate * Time.deltaTime);
+            }
 
-                // Call the delegate Movement Function...
-                arrivedAtDestination = moveFunc(); 
-
-                if (arrivedAtDestination == true)
+            if (isMoving && moveFunc != null)
+            {
+                bool arrivedAtDestination = moveFunc();
+                if (arrivedAtDestination)
                 {
                     SetNextPosition();
                 }
             }
         }
 
-        /// <summary>
-        /// Setup the list of positions to follow
-        /// </summary>
-        /// <param name="positionsList">List of Vector3s indicating move-to locations</param>
+        private bool CheckForPedestrians()
+        {
+            float detectionDistance = 3.5f; // Distanza di rilevamento pedoni
+            float coneAngle = 30f; // Angolo del cono per pedoni
+            int numRays = 10; // Numero di raggi nel cono
+            Vector3 rayOrigin = transform.position; 
+            Vector3 rayDirection = transform.forward; 
+
+            bool pedestrianDetected = false;
+
+            float halfAngle = coneAngle / 2f;
+
+            for (int i = 0; i < numRays; i++)
+            {
+                float angle = Mathf.Lerp(-halfAngle, halfAngle, (float)i / (numRays - 1));
+                Vector3 dir = Quaternion.Euler(0, angle, 0) * rayDirection;
+
+                RaycastHit hit;
+                if (Physics.Raycast(rayOrigin, dir, out hit, detectionDistance))
+                {
+                    if (hit.collider.CompareTag("Pedestrian"))
+                    {
+                        Debug.Log("Pedone rilevato: " + hit.collider.name);
+                        Debug.DrawRay(rayOrigin, dir * detectionDistance, Color.red);
+                        pedestrianDetected = true;
+                    }
+                    else
+                    {
+                        Debug.DrawRay(rayOrigin, dir * detectionDistance, Color.green);
+                    }
+                }
+            }
+
+            return pedestrianDetected;
+        }
+
+        private bool CheckForCars()
+        {
+            float detectionDistance = 5f; // Distanza di rilevamento per le auto
+            float coneAngle = 10f; // Angolo del cono per le auto
+            int numRays = 10; // Numero di raggi nel cono
+            Vector3 rayOrigin = transform.position;
+            Vector3 rayDirection = transform.forward;
+
+            bool carDetected = false;
+
+            float halfAngle = coneAngle / 2f;
+
+            for (int i = 0; i < numRays; i++)
+            {
+                float angle = Mathf.Lerp(-halfAngle, halfAngle, (float)i / (numRays - 1));
+                Vector3 dir = Quaternion.Euler(0, angle, 0) * rayDirection;
+
+                RaycastHit hit;
+                if (Physics.Raycast(rayOrigin, dir, out hit, detectionDistance))
+                {
+                    if (hit.collider.CompareTag("Car"))
+                    {
+                        Debug.Log("Auto rilevata: " + hit.collider.name);
+                        Debug.DrawRay(rayOrigin, dir * detectionDistance, Color.blue);
+                        carDetected = true;
+                    }
+                    else
+                    {
+                        Debug.DrawRay(rayOrigin, dir * detectionDistance, Color.green);
+                    }
+                }
+            }
+
+            return carDetected;
+        }
+
         public void SetWaypointsGroup(WaypointsGroup newGroup)
         {
             Waypoints = newGroup;
             waypointsList = null;
-            if(newGroup != null)
+            if (newGroup != null)
             {
                 waypointsList = newGroup.waypoints;
             }
-
         }
 
-
-        /// <summary>
-        /// Sets the position to beging moving toward; if autpAupdatePostion is true, then start
-        /// at that index-related position immediately.
-        /// </summary>
-        /// <param name="ndx"></param>
-        /// <param name="autoUpdatePosition"></param>
         void StartAtIndex(int ndx, bool autoUpdatePosition = true)
         {
             if (StartTravelDirection == TravelDirection.REVERSE)
@@ -176,71 +223,26 @@ namespace WaypointsFree
             if (autoUpdatePosition)
             {
                 transform.position = waypointsList[ndx].GetPosition();
-
-                if(LookAtSpeed > 0)
-                {
-                    if (StartTravelDirection == TravelDirection.REVERSE)
-                    {
-                        ndx -= 1;
-                        if (ndx < 0) ndx = waypointsList.Count - 1;
-                    }
-                    else
-                    {
-                        ndx += 1;
-                        if (ndx >= waypointsList.Count)
-                            ndx = 0;
-                    }
-
-                    /*
-                    Waypoint wp = waypointsList[ndx];
-                    Vector3 wpPos = wp.GetPosition();
-                    Vector3 worldUp = Vector3.forward;
-
-                    transform.LookAt(wpPos, worldUp);
-                    */
-                }
             }
         }
 
-
-
-        /// <summary>
-        /// Fetch the next waypoint position in the waypoints list
-        /// Depending on Endpoint behavior, ping pong, loop, or stop.
-        ///  - Stop : Stops movement at the endpoint
-        ///  - Ping Pong: reverses traveseral of the Waypoint Positions list
-        ///  - Loop : Resets the index to 0; restarting at the first waypoint
-        /// </summary>
         void SetNextPosition()
         {
             int posCount = waypointsList.Count;
             if (posCount > 0)
             {
-
-                // Reached the endpoint; determing what do do next
-                if( (positionIndex == 0 && travelIndexCounter < 0) || (positionIndex == posCount - 1 && travelIndexCounter > 0))
+                if ((positionIndex == 0 && travelIndexCounter < 0) || (positionIndex == posCount - 1 && travelIndexCounter > 0))
                 {
-                    // Stop moving when an endpoint is reached
-                    if(EndReachedBehavior == EndpointBehavior.STOP)
+                    if (EndReachedBehavior == EndpointBehavior.STOP)
                     {
                         isMoving = false;
                         return;
                     }
-
-                    // Continue movement, but reverse direction
-                    else if(EndReachedBehavior == EndpointBehavior.PINGPONG)
+                    else if (EndReachedBehavior == EndpointBehavior.PINGPONG)
                     {
                         travelIndexCounter = -travelIndexCounter;
                     }
-
-                    // General Loop (default)
-                    else if (EndReachedBehavior == EndpointBehavior.LOOP)
-                    {
-                        
-                    }
-
                 }
-
 
                 positionIndex += travelIndexCounter;
 
@@ -248,7 +250,6 @@ namespace WaypointsFree
                     positionIndex = 0;
                 else if (positionIndex < 0)
                     positionIndex = posCount - 1;
-
 
                 nextPosition = waypointsList[positionIndex].GetPosition();
                 if (XYZConstraint == PositionConstraint.XY)
@@ -266,55 +267,34 @@ namespace WaypointsFree
             }
         }
 
-        /// <summary>
-        /// Reset movement metrics based on the current transform postion and the next waypoint.
-        /// </summary>
         void ResetMovementValues()
         {
-            // Update current position, distance, and start time -- used in Update to move the transform
             startPosition = transform.position;
             destinationPosition = nextPosition;
             distanceToNextWaypoint = Vector3.Distance(startPosition, destinationPosition);
             distanceTraveled = 0;
             timeTraveled = 0;
-
         }
 
-        /// <summary>
-        /// Uses a Vector3 Lerp function to update the gameobject's transform position.
-        /// MoveSpeed needs to be > 0
-        /// </summary>
-        /// <returns></returns>
         bool MoveLerpSimple()
         {
-            if (MoveSpeed < 0)
-                MoveSpeed = 0;
+            if (currentSpeed < 0)
+                currentSpeed = 0;
 
             timeTraveled += Time.deltaTime;
-            distanceTraveled += Time.deltaTime * MoveSpeed;
+            distanceTraveled += Time.deltaTime * currentSpeed;
             float fracAmount = distanceTraveled / distanceToNextWaypoint;
             transform.position = Vector3.Lerp(startPosition, destinationPosition, fracAmount);
-            // set LookAt speed to 0 if no rotation toward the destination is desired.
             UpdateLookAtRotation();
             return fracAmount >= 1;
         }
 
-        /// <summary>
-        /// Translates the waypoint traveler using the forward direction. Note that "forward" is dependent
-        /// upon the directional/position constraint.
-        ///  - XYZ: Vector3.forward
-        ///  - XY : Vector3.up
-        ///  - XZ : Vector3.right
-        ///  
-        ///  -- When using this method of translation, LOOKATSPEED must be > 0.
-        /// </summary>
-        /// <returns></returns>
         bool MoveForwardToNext()
         {
-            if (MoveSpeed < 0)
-                MoveSpeed = 0;
+            if (currentSpeed < 0)
+                currentSpeed = 0;
 
-            float rate = Time.deltaTime * MoveSpeed;
+            float rate = Time.deltaTime * currentSpeed;
             float distance = Vector3.Distance(transform.position, destinationPosition);
             if (distance < rate)
             {
@@ -322,9 +302,7 @@ namespace WaypointsFree
                 return true;
             }
 
-            // If lookatspeed is 0, then set it to max; this method of movement requires
-            // the gameobject transform to be looking toward it's destination
-            if (LookAtSpeed <= 0)    LookAtSpeed = float.MaxValue;
+            if (LookAtSpeed <= 0) LookAtSpeed = float.MaxValue;
 
             UpdateLookAtRotation();
 
@@ -337,21 +315,14 @@ namespace WaypointsFree
             transform.Translate(moveDir * rate);
 
             return false;
-
         }
 
-        /// <summary>
-        /// Rotate the traveler to "look" at the next waypoint.
-        /// Note: When using the FORWARD_TRANSLATE movement mode, LookAtSpeed is always > 0
-        /// </summary>
         void UpdateLookAtRotation()
         {
-            // LookatSpeed is 0; no rotating...
             if (LookAtSpeed <= 0) return;
 
             float step = LookAtSpeed * Time.deltaTime;
             Vector3 targetDir = nextPosition - transform.position;
-
 
             if (XYZConstraint == PositionConstraint.XY)
             {
@@ -359,7 +330,6 @@ namespace WaypointsFree
                 Quaternion qt = Quaternion.AngleAxis(angle, Vector3.forward);
                 transform.rotation = Quaternion.RotateTowards(transform.rotation, qt, step);
             }
-
             else if (XYZConstraint == PositionConstraint.XZ)
             {
                 float angle = Mathf.Atan2(targetDir.x, targetDir.z) * Mathf.Rad2Deg;
@@ -369,12 +339,8 @@ namespace WaypointsFree
             else
             {
                 Vector3 newDir = Vector3.RotateTowards(transform.forward, targetDir, step, 0.0f);
-                // Move our position a step closer to the target.
                 transform.rotation = Quaternion.LookRotation(newDir);
-
             }
-
         }
-
     }
 }

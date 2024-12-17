@@ -23,7 +23,10 @@ public class StandbyState : State
         if (Input.GetMouseButtonDown(0))
         {
             Vector3 destination = GetDestinationFromMouseClick();
-            robotController.SetDestination(destination);
+
+            Vector3 gridDestination = new Vector3(destination.x, -0.01f, destination.z);
+
+            robotController.SetDestination(gridDestination);
             destinationSet = true;
         }
 

@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Pedestrian
   - Car
+  - BlockedCell
   layers:
   - Default
   - TransparentFX

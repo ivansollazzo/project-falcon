@@ -6,12 +6,16 @@ public class Cell
         private int x, z;
         private bool isWalkable;
 
+        private float gCost;
+        private float hCost;
+
         public Cell(Vector3 position, int x, int z, bool isWalkable)
         {
             this.worldPosition = position;
             this.isWalkable = isWalkable;
             this.x = x;
             this.z = z;
+            this.gCost = 1.0f;
         }
         public override string ToString()
         {
@@ -40,6 +44,24 @@ public class Cell
         public bool IsWalkable()
         {
             return this.isWalkable;
+        }
+
+        // Metodo per ottenere l'fCost della cella
+        public float GetFCost()
+        {
+            return this.gCost + this.hCost;
+        }
+
+        // Metodo per settare il gCost della cella
+        public void SetGCost(float gCost)
+        {
+            this.gCost = gCost;
+        }
+
+        // Metodo per calcolare l'hCost della cella
+        public void CalculateHCost(Cell endCell)
+        {
+            this.hCost = Vector3.Distance(this.GetWorldPosition(), endCell.GetWorldPosition());
         }
 
     }

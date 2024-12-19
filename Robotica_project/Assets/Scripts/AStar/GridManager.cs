@@ -85,6 +85,7 @@ public class GridManager : MonoBehaviour
                         if (objBounds.Contains(cellPosition))
                         {
                             grid[x, z].SetWalkable(false);
+                            grid[x,z].SetGCost(float.MaxValue);
                         }
                     }
                 }

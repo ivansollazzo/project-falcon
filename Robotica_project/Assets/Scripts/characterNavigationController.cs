@@ -57,9 +57,6 @@ public class PedestrianController : MonoBehaviour
 
         // Aggiorna la posizione precedente
         lastPosition = transform.position;
-
-        // Debug (Opzionale)
-        Debug.Log($"Velocity Magnitude: {velocityMagnitude}, Forward Dot: {forwardDotProduct}, Right Dot: {rightDotProduct}");
     }
 
     // Metodo per impostare una nuova destinazione

@@ -5,22 +5,16 @@ public class RobotController : MonoBehaviour
     private StateMachine stateMachine;
     private Vector3 destination;
 
-    private NavMeshAgent navMeshAgent;
-
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         // Add NavMeshAgent and StateMachine components
         stateMachine = this.gameObject.AddComponent<StateMachine>();
-        navMeshAgent = this.gameObject.AddComponent<NavMeshAgent>();
 
         // Check if components are assigned
         if (stateMachine == null)
         {
             Debug.LogError("StateMachine is not assigned!");
-        }
-        if (navMeshAgent == null) {
-            Debug.LogError("NavMeshAgent is not assigned!");
         }
 
         // Impostazione dello stato iniziale
@@ -37,9 +31,5 @@ public class RobotController : MonoBehaviour
 
     public Vector3 GetDestination() {
         return this.destination;
-    }
-
-    public NavMeshAgent GetNavMeshAgent() {
-        return this.navMeshAgent;
     }
 }

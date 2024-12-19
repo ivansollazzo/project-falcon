@@ -15,7 +15,7 @@ public class Cell
         }
         public override string ToString()
         {
-            return $"Cell [x: {x}, y: {z}, pos: {worldPosition}, walkable: {isWalkable}]";
+            return $"Cell [x: {this.x}, y: {this.z}, pos: {this.worldPosition}, walkable: {this.isWalkable}]";
         }
 
         // Metodo per ottenere la posizione nel mondo della cella
@@ -27,7 +27,7 @@ public class Cell
         // Metodo per ottenere la posizione della cella nella griglia
         public Vector3 GetGridPosition()
         {
-            return new Vector3(x, -0.001f, z);
+            return new Vector3(x, -0.01f, z);
         }
 
         // Metodo per determinare settare la cella come percorribile o meno

@@ -9,7 +9,7 @@ public class GridManager : MonoBehaviour
     public float cellSize = 0.72f;  // Dimensione della cella
     public int gridWidth = 150;  // Numero di celle per la larghezza della mappa
     public int gridHeight = 100;  // Numero di celle per l'altezza della mappa
-    public Cell[,] grid;  // Griglia di celle
+    private Cell[,] grid;  // Griglia di celle
 
     // Singleton
     public static GridManager Instance;
@@ -106,10 +106,5 @@ public class GridManager : MonoBehaviour
                 Gizmos.DrawCube(cellPosition, new Vector3(cellSize, 0.1f, cellSize));
             }
         }
-    }
-
-    public bool IsGridGenerated()
-    {
-        return grid != null && grid.Length > 0;
     }
 }

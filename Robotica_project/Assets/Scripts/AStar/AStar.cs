@@ -64,7 +64,7 @@ public class AStar
                     continue;
 
                 // Calcola il nuovo gCost per il vicino
-                float tentativeGCost = currentCell.GetGCost() + Vector3.Distance(currentCell.GetWorldPosition(), neighbor.GetWorldPosition());
+                float tentativeGCost = currentCell.GetGCost() + GetManhattanDistance(currentCell.GetWorldPosition(), neighbor.GetWorldPosition());
 
                 // Se il vicino non è nella open list o se abbiamo trovato un percorso migliore
                 if (!openList.Contains(neighbor) || tentativeGCost < neighbor.GetGCost())
@@ -85,6 +85,13 @@ public class AStar
         Debug.Log("Non esiste un percorso valido!");
         return null;
     }
+
+    // Metodo per ottenere la distanza Manhattan tra due vector 3
+    private float GetManhattanDistance(Vector3 a, Vector3 b)
+    {
+        return Mathf.Abs(a.x - b.x) + Mathf.Abs(a.z - b.z);
+    }
+    
 
     // Trova la cella con il costo f più basso
     private Cell GetCellWithLowestFCost(List<Cell> cells)

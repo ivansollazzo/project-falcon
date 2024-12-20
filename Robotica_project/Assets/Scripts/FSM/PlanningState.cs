@@ -9,7 +9,7 @@ public class PlanningState : State
 
     private Cell[,] grid;
 
-    private List<Cell> path;
+    public List<Cell> path;
 
     public PlanningState(StateMachine stateMachine) : base(stateMachine)
     {
@@ -60,14 +60,17 @@ public class PlanningState : State
             // Disegna il percorso
             PathDrawer pathDrawer = stateMachine.gameObject.AddComponent<PathDrawer>();
             pathDrawer.path = path;
+
+            // Passa allo stato di standby
+            stateMachine.SetState(new NavigationState(stateMachine, path));
         }
         else
         {
             Debug.Log("Percorso non trovato!");
+            stateMachine.SetState(new StandbyState(stateMachine));
         }
 
-        // Passa allo stato di standby
-        stateMachine.SetState(new StandbyState(stateMachine));
+        
     }
 
     public override void ExitState()

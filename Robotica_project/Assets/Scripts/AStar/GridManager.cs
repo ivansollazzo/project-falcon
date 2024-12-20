@@ -108,4 +108,15 @@ public class GridManager : MonoBehaviour
             }
         }
     }
+
+    public Cell GetCellFromWorldPosition(Vector3 position)
+    {
+        int x = Mathf.FloorToInt((position - transform.position).x / cellSize);
+        int z = Mathf.FloorToInt((position - transform.position).z / cellSize);
+
+        if (x < 0 || x >= gridWidth || z < 0 || z >= gridHeight)
+            return null;
+
+        return grid[x, z];
+    }
 }

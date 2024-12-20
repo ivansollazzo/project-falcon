@@ -153,6 +153,7 @@ namespace WaypointsFree
                 {
                     if (hit.collider.CompareTag("Pedestrian"))
                     {
+                        //Debug.Log("Pedone rilevato: " + hit.collider.name);
                         Debug.DrawRay(rayOrigin, dir * detectionDistance, Color.red);
                         pedestrianDetected = true;
                     }
@@ -188,6 +189,7 @@ namespace WaypointsFree
                 {
                     if (hit.collider.CompareTag("Car"))
                     {
+                        //Debug.Log("Auto rilevata: " + hit.collider.name);
                         Debug.DrawRay(rayOrigin, dir * detectionDistance, Color.blue);
                         carDetected = true;
                     }

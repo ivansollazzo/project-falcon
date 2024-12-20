@@ -34,6 +34,12 @@ public class AStar
     // Metodo principale per eseguire l'algoritmo A*
     public List<Cell> FindPath()
     {
+        // Verifica se la cella di destinazione è percorribile
+        if (!endCell.IsWalkable())
+        {
+            Debug.LogError("La cella di destinazione non è percorribile.");
+            return null;
+        }
         // Inizializzazione delle liste
         openList.Clear();
         closedList.Clear();
@@ -111,7 +117,7 @@ public class AStar
         List<Cell> neighbors = new List<Cell>();
 
         // Controlla le celle adiacenti (N, S, E, W)
-        int[] directions = { -1, 1 };
+        int[] directions = { -1, 0, 1 };
 
         foreach (int dx in directions)
         {

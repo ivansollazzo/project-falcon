@@ -2,21 +2,21 @@ using UnityEngine;
 
 public class ArrivalState : State
 {
-    public ArrivalState(StateMachine sm) : base(sm) { }
+    public ArrivalState(StateMachine stateMachine) : base(stateMachine) {}
 
     public override void EnterState()
     {
-        Debug.Log("Robot entered ARRIVAL state!");
+        Debug.Log("Arrivato alla destinazione! Stato di ARRIVAL.");
     }
 
     public override void ExecuteState()
     {
-        Debug.Log("Robot has reached the target!");
+        Debug.Log("Arrivato! Pronto per la prossima Destinazione");
         stateMachine.SetState(new StandbyState(stateMachine));
     }
 
     public override void ExitState()
     {
-        Debug.Log("Robot is exiting ARRIVAL state!");
+        Debug.Log("Uscendo dallo stato ARRIVAL.");
     }
 }

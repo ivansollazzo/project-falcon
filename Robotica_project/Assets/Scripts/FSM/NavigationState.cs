@@ -30,16 +30,34 @@ public class NavigationState : State
         {
             Debug.Log(cell.GetWorldPosition());
         }
+
+        // Imposta il comando di navigazione
+        robotController.SetMoving(true);
     }
 
     public override void ExecuteState()
     {
         // Ottieni la prossima posizione target dal percorso
         Vector3 targetPosition = path[currentCornerIndex].GetWorldPosition();
+
+        // Controlla se ci sono altri punti target nella stessa direzione e vai direttamente a quel punto
+        for (int i = currentCornerIndex + 1; i < path.Count; i++)
+        {
+            Vector3 nextPosition = path[i].GetWorldPosition();
+            Vector3 direction = nextPosition - targetPosition;
+            direction.Normalize();
+            Quaternion targetRotation = Quaternion.LookRotation(direction);
+
+            // Se la direzione è maggiore di una certa soglia, allora non andare direttamente a quel punto
+            if (Quaternion.Angle(robotController.transform.rotation, targetRotation) > 0.25f)
+            {
+                break;
+            }
+
+            targetPosition = nextPosition;
+        }
         
         // Aggiorna la posizione del robot
-        //bool targetReached = robotController.MoveToTarget(targetPosition);
-
         bool rotatedToTarget = robotController.RotateToTarget(targetPosition);
 
         if (rotatedToTarget)

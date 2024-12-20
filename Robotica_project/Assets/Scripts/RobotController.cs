@@ -38,32 +38,57 @@ public class RobotController : MonoBehaviour
     // Metodo per ruotare verso il target
     public bool RotateToTarget(Vector3 targetPosition)
     {
-        // Ruotiamo il robot verso il target e calcoliamo l'errore ogni volta. Questo errore è la differenza tra la rotazione attuale e la rotazione desiderata. Se l'errore è minore di un certo valore, ritorniamo true, altrimenti false.
-        Vector3 direction = (targetPosition - transform.position).normalized;
-        Quaternion targetRotation = Quaternion.LookRotation(direction);
-        float error = Quaternion.Angle(transform.rotation, targetRotation);
-
-        if (error > 0.1f)
+        // Verifica che il comando di movimento si attivo
+        if (isMoving)
         {
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 5.0f);
-            return false;
+            Vector3 direction = targetPosition - transform.position;
+    
+            if (direction.sqrMagnitude < 0.001f) // Già allineato
+                return true;
+
+            direction.Normalize();
+            Quaternion targetRotation = Quaternion.LookRotation(direction);
+            float error = Quaternion.Angle(transform.rotation, targetRotation);
+
+            if (error > 1.0f) // Aumenta la tolleranza
+            {
+                // Calcola la velocità di rotazione in base all'errore. Adatta la velocità di rotazione in base all'errore.
+                float rotationSpeed = Time.deltaTime * 180.0f;
+
+                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * rotationSpeed);
+                return false;
+            }
+
+            transform.rotation = targetRotation; // Allinea forzatamente
+            return true;
         }
 
-        return true;
+        return false;
     }
 
     public bool MoveToTarget(Vector3 targetPosition)
     {
-        // Muoviamo il robot verso il target e calcoliamo l'errore ogni volta. Se l'errore è minore di un certo valore, ritorniamo true, altrimenti false.
-        float error = Vector3.Distance(transform.position, targetPosition);
-        transform.position = Vector3.MoveTowards(transform.position, targetPosition, Time.deltaTime * 5.0f);
-
-        if (error > 0.1f)
+        // Verifica che il comando di movimento sia attivo
+        if (isMoving)
         {
-            return false;
+            // Muoviamo il robot verso il target e calcoliamo l'errore ogni volta. Se l'errore è minore di un certo valore, ritorniamo true, altrimenti false.
+            float error = Vector3.Distance(transform.position, targetPosition);
+
+            // Calcola il fattore di interpolazione basato sulla velocità e sulla distanza
+            float t = Mathf.Clamp01(Time.deltaTime / error);
+
+            // Muove il robot verso il target
+            transform.position = Vector3.Lerp(transform.position, targetPosition, t);
+
+            if (error > 0.1f)
+            {
+                return false;
+            }
+
+            return true;
         }
 
-        return true;
+        return false;
     }
 
     // Funzione per impostare la destinazione del robot

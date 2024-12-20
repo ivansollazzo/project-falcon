@@ -1,9 +1,14 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 public class RobotController : MonoBehaviour
 {
     private StateMachine stateMachine;
     private Vector3 destination;
     private bool isMoving = false;
+    private List<Cell> path;
+    private int currentCornerIndex;
+    
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -103,4 +108,40 @@ public class RobotController : MonoBehaviour
     {
         return this.destination;
     }
+
+    // Funzione per controllare gli ostacoli davanti al robot utilizzando il filtro di Kalman
+    public IEnumerator CheckObstacle(System.Action<bool> callback)
+    {
+        ObstacleSensor obstacleSensor = GetComponent<ObstacleSensor>();
+        Vector3? obstaclePosition = obstacleSensor.DetectObstacle();
+        
+        if (obstaclePosition != null)
+        {
+            Debug.Log("Ostacolo rilevato! Posizione: " + obstaclePosition);
+
+            Debug.Log("Aspetto 5 secondi per vedere se l'ostacolo si muove...");
+            
+            yield return new WaitForSeconds(5);
+            
+            Debug.Log("Controllo se l'ostacolo si è mosso...");
+            
+            obstaclePosition = obstacleSensor.DetectObstacle();
+            
+            if (obstaclePosition != null)
+            {
+
+                Debug.Log("Ostacolo fisso rilevato: " + obstaclePosition.Value);
+
+                // Necessario marcare la cella come non percorribile
+                GridManager.Instance.MarkCellAsBlocked(obstaclePosition.Value);
+
+                callback(true);
+                
+                yield break;
+            }
+        }
+
+        callback(false);
+    }
+
 }

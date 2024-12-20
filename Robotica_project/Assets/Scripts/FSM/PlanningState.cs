@@ -37,8 +37,8 @@ public class PlanningState : State
         Vector3 robotPosition = stateMachine.gameObject.transform.position;
 
         // Ottengo la cella di partenza corrispondente del robot. Itero tutte le celle per ottenere la posizione corrispondente con riferimento alla distanza più vicina.
-        Cell startCell = GetClosestCell(robotPosition);
-        Cell endCell = GetClosestCell(destination);
+        Cell startCell = GridManager.Instance.GetCellFromWorldPosition(robotPosition);
+        Cell endCell = GridManager.Instance.GetCellFromWorldPosition(destination);
 
         // Stampiamo tutto
         Debug.Log("Cella di partenza: " + startCell);
@@ -76,23 +76,5 @@ public class PlanningState : State
     public override void ExitState()
     {
         Debug.Log("Uscito dallo stato PLANNING.");
-    }
-
-    // Metodo per ottenere la cella più vicina
-    public Cell GetClosestCell(Vector3 position)
-    {
-        Cell closestCell = null;
-        float minDistance = float.MaxValue;
-        foreach (Cell cell in grid)
-        {
-            float distance = Vector3.Distance(cell.GetWorldPosition(), position);
-            if (distance < minDistance)
-            {
-                minDistance = distance;
-                closestCell = cell;
-            }
-        }
-
-        return closestCell;
     }
 }

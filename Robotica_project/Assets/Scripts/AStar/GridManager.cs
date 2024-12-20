@@ -109,14 +109,35 @@ public class GridManager : MonoBehaviour
         }
     }
 
+    // Metodo per marcare una cella come bloccata
+    public void MarkCellAsBlocked(Vector3 position)
+    {
+        Cell cell = GetCellFromWorldPosition(position);
+        if (cell != null)
+        {
+            cell.SetWalkable(false);
+            cell.SetGCost(float.MaxValue);
+            Debug.Log("Cella marcata come bloccata: " + cell);
+        }
+        else {
+            Debug.LogError("Nessuna cella trovata alla posizione specificata: " + position);
+        }
+    }
+
     public Cell GetCellFromWorldPosition(Vector3 position)
     {
-        int x = Mathf.FloorToInt((position - transform.position).x / cellSize);
-        int z = Mathf.FloorToInt((position - transform.position).z / cellSize);
+        Cell closestCell = null;
+        float minDistance = float.MaxValue;
+        foreach (Cell cell in grid)
+        {
+            float distance = Vector3.Distance(cell.GetWorldPosition(), position);
+            if (distance < minDistance)
+            {
+                minDistance = distance;
+                closestCell = cell;
+            }
+        }
 
-        if (x < 0 || x >= gridWidth || z < 0 || z >= gridHeight)
-            return null;
-
-        return grid[x, z];
+        return closestCell;
     }
 }

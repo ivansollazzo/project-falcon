@@ -117,23 +117,18 @@ public class AStar
         List<Cell> neighbors = new List<Cell>();
 
         // Controlla le celle adiacenti (N, S, E, W)
-        int[] directions = { -1, 0, 1 };
+        int[] dx = { -1, 1, 0, 0 };
+        int[] dz = { 0, 0, -1, 1 };
 
-        foreach (int dx in directions)
+        for (int i = 0; i < 4; i++)
         {
-            foreach (int dz in directions)
+            int checkX = Convert.ToInt32(cell.GetGridPosition().x) + dx[i];
+            int checkZ = Convert.ToInt32(cell.GetGridPosition().z) + dz[i];
+
+            // Verifica se il vicino è dentro i limiti della griglia
+            if (checkX >= 0 && checkX < grid.GetLength(0) && checkZ >= 0 && checkZ < grid.GetLength(1))
             {
-                if (dx == 0 && dz == 0)
-                    continue;
-
-                int checkX = Convert.ToInt32(cell.GetGridPosition().x) + dx;
-                int checkZ = Convert.ToInt32(cell.GetGridPosition().z) + dz;
-
-                // Verifica se il vicino è dentro i limiti della griglia
-                if (checkX >= 0 && checkX < grid.GetLength(0) && checkZ >= 0 && checkZ < grid.GetLength(1))
-                {
-                    neighbors.Add(grid[checkX, checkZ]);
-                }
+                neighbors.Add(grid[checkX, checkZ]);
             }
         }
 

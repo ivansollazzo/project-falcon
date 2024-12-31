@@ -1,0 +1,166 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using Neo4j.Driver;
+using System.Threading.Tasks;
+
+public class FoodAvailability : MonoBehaviour
+{
+    private IDriver driver;
+    private IAsyncSession session;
+
+    async void Start()
+    {
+        string uri = "bolt://localhost:7689";
+        string user = "neo4j";
+        string password = "PeraCotta10$";
+
+        Debug.Log("Inizializzazione del driver Neo4j...");
+
+        try
+        {
+            driver = GraphDatabase.Driver(uri, AuthTokens.Basic(user, password));
+            session = driver.AsyncSession();
+
+            Debug.Log("Connessione al database Neo4j in corso...");
+            var result = await session.RunAsync("RETURN 1 AS test");
+            Debug.Log("Connessione al database Neo4j riuscita!");
+
+            // Avvia la coroutine per aggiornare la disponibilità dei cibi
+            StartCoroutine(UpdateFoodAvailability());
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError("Errore nella connessione al database Neo4j: " + ex.Message);
+        }
+    }
+
+    private IEnumerator UpdateFoodAvailability()
+    {
+        Debug.Log("Coroutine di aggiornamento avviata...");
+
+        while (true)
+        {
+            Debug.Log("Attesa di 30 secondi prima del prossimo aggiornamento...");
+            yield return new WaitForSeconds(600f);
+
+            Debug.Log("Avvio dell'aggiornamento della disponibilità dei cibi...");
+
+            // Recupera i cibi dal database
+            var task = RetrieveAndGenerateMenuItemsAvailability();
+            while (!task.IsCompleted)
+            {
+                yield return null;
+            }
+
+            if (task.Exception != null)
+            {
+                Debug.LogError("Errore durante il recupero dei cibi: " + task.Exception.InnerException?.Message);
+                continue;
+            }
+
+            Dictionary<string, bool> menuItems = task.Result;
+
+            // Passa i dati raccolti al task per l'aggiornamento
+            var updateTask = UpdateMenuItemsAvailability(menuItems);
+            while (!updateTask.IsCompleted)
+            {
+                yield return null;
+            }
+
+            if (updateTask.Exception != null)
+            {
+                Debug.LogError("Errore durante l'aggiornamento della disponibilità dei cibi: " + updateTask.Exception.InnerException?.Message);
+            }
+        }
+    }
+
+    private async Task<Dictionary<string, bool>> RetrieveAndGenerateMenuItemsAvailability()
+    {
+        Debug.Log("Recupero dei cibi dal database...");
+
+        Dictionary<string, bool> menuItems = new Dictionary<string, bool>();
+
+        try
+        {
+            var result = await session.ExecuteReadAsync(async tx =>
+            {
+                var queryResult = await tx.RunAsync("MATCH (item:MENU_ITEM) RETURN item.name AS name, item.available AS available");
+                return await queryResult.ToListAsync();
+            });
+
+            Debug.Log($"Trovati {result.Count} cibi nel database.");
+
+            foreach (var record in result)
+            {
+                string name = record["name"].As<string>();
+                bool isAvailable = Random.value > 0.5f; // Genera true o false casualmente
+                menuItems[name] = isAvailable;
+
+                Debug.Log($"Cibo recuperato: {name}, Disponibile (originale): {record["available"].As<bool>()}, Nuova Disponibilità: {isAvailable}");
+            }
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError("Errore durante il recupero dei cibi: " + ex.Message);
+        }
+
+        return menuItems;
+    }
+
+    private async Task UpdateMenuItemsAvailability(Dictionary<string, bool> menuItems)
+    {
+        Debug.Log("Inizio aggiornamento della disponibilità dei cibi...");
+
+        try
+        {
+            await session.ExecuteWriteAsync(async tx =>
+            {
+                foreach (var item in menuItems)
+                {
+                    string name = item.Key;
+                    bool isAvailable = item.Value;
+
+                    Debug.Log($"Aggiornamento di '{name}' con disponibilità: {isAvailable}");
+
+                    await tx.RunAsync(
+                        "MATCH (item:MENU_ITEM {name: $name}) SET item.available = $available",
+                        new { name, available = isAvailable }
+                    );
+
+                    Debug.Log($"Cibo aggiornato: {name}, Disponibile: {isAvailable}");
+                }
+            });
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError("Errore nella transazione di aggiornamento: " + ex.Message);
+        }
+
+        Debug.Log("Aggiornamento della disponibilità completato.");
+    }
+
+    async void OnApplicationQuit()
+    {
+        Debug.Log("Chiusura dell'applicazione. Pulizia delle risorse...");
+
+        try
+        {
+            if (session != null)
+            {
+                await session.CloseAsync();
+                Debug.Log("Sessione chiusa.");
+            }
+
+            if (driver != null)
+            {
+                await driver.DisposeAsync();
+                Debug.Log("Driver chiuso.");
+            }
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError("Errore durante la chiusura delle risorse: " + ex.Message);
+        }
+    }
+}

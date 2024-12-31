@@ -14,7 +14,7 @@ public class ObstacleSensor : MonoBehaviour
         RaycastHit hit;
         Vector3 direction = transform.forward; // Direzione del sensore
 
-        for (int layer = 1; layer < verticalLayers; layer++)
+        for (int layer = 1; layer <= verticalLayers; layer++)
         {
             float heightOffset = layer * verticalSpacing;
 
@@ -47,7 +47,7 @@ public class ObstacleSensor : MonoBehaviour
         Gizmos.color = Color.red;
         Vector3 direction = transform.forward;
 
-        for (int layer = 1; layer < verticalLayers; layer++)
+        for (int layer = 1; layer <= verticalLayers; layer++)
         {
             float heightOffset = layer * verticalSpacing;
 

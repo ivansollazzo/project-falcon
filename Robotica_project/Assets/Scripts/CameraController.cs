@@ -15,13 +15,18 @@ public class CameraController : MonoBehaviour
     void Start()
     {
         cameraTransform = Camera.main.transform; // Assign the main camera's transform
+
+        // Check if operating system is Mac OS X
+        if (SystemInfo.operatingSystemFamily == OperatingSystemFamily.MacOSX) {
+            rotationSpeed *= 30f;
+        }
     }
 
     void Update()
     {
         HandleMovement();
         HandleZoom();
-        HandleRotation();
+        HandleMouseForRotation();
     }
 
     void HandleMovement()
@@ -48,16 +53,27 @@ public class CameraController : MonoBehaviour
 
     void HandleRotation()
     {
-        if (Input.GetMouseButton(1)) // Right mouse button
+        float mouseX = Input.GetAxis("Mouse X");
+        float mouseY = Input.GetAxis("Mouse Y");
+
+        // Horizontal rotation
+        transform.Rotate(Vector3.up, mouseX * rotationSpeed * Time.deltaTime, Space.World);
+
+        // Vertical rotation
+        cameraTransform.Rotate(Vector3.right, -mouseY * rotationSpeed * Time.deltaTime, Space.Self);
+    }
+
+    void HandleMouseForRotation() {
+        // If right mouse button is pressed (on all operating systems)
+        if (Input.GetMouseButton(1))
         {
-            float mouseX = Input.GetAxis("Mouse X");
-            float mouseY = Input.GetAxis("Mouse Y");
+            HandleRotation();
+        }
 
-            // Horizontal rotation
-            transform.Rotate(Vector3.up, mouseX * rotationSpeed * Time.deltaTime, Space.World);
-
-            // Vertical rotation
-            cameraTransform.Rotate(Vector3.right, -mouseY * rotationSpeed * Time.deltaTime, Space.Self);
+        // If option key and the left mouse button are pressed (on Mac OS X)
+        if (SystemInfo.operatingSystemFamily == OperatingSystemFamily.MacOSX && Input.GetKey(KeyCode.LeftAlt) && Input.GetMouseButton(0))
+        {
+            HandleRotation();
         }
     }
 }

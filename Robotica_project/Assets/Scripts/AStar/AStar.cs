@@ -115,24 +115,70 @@ public class AStar
     private List<Cell> GetNeighbors(Cell cell)
     {
         List<Cell> neighbors = new List<Cell>();
-
-        // Controlla le celle adiacenti (N, S, E, W)
-        int[] dx = { -1, 1, 0, 0 };
-        int[] dz = { 0, 0, -1, 1 };
-
-        for (int i = 0; i < 4; i++)
+    
+        // Ottieni la posizione corrente della cella
+        int currentX = (int)cell.GetGridPosition().x;
+        int currentZ = (int)cell.GetGridPosition().z;
+    
+        // Direzioni ortogonali (N, S, W, E)
+        (int dx, int dz)[] straightDirections =
         {
-            int checkX = Convert.ToInt32(cell.GetGridPosition().x) + dx[i];
-            int checkZ = Convert.ToInt32(cell.GetGridPosition().z) + dz[i];
-
-            // Verifica se il vicino è dentro i limiti della griglia
-            if (checkX >= 0 && checkX < grid.GetLength(0) && checkZ >= 0 && checkZ < grid.GetLength(1))
+            (-1, 0), // Nord
+            (1, 0),  // Sud
+            (0, -1), // Ovest
+            (0, 1)   // Est
+        };
+    
+        // Direzioni diagonali
+        (int dx, int dz, (int adjX, int adjZ) first, (int adjX, int adjZ) second)[]     diagonalDirections =
+        {
+            (-1, -1, (-1, 0), (0, -1)), // Nord-Ovest
+            (-1, 1, (-1, 0), (0, 1)),  // Nord-Est
+            (1, -1, (1, 0), (0, -1)),  // Sud-Ovest
+            (1, 1, (1, 0), (0, 1))     // Sud-Est
+        };
+    
+        // Aggiungi prima le celle ortogonali
+        foreach (var (dx, dz) in straightDirections)
+        {
+            int neighborX = currentX + dx;
+            int neighborZ = currentZ + dz;
+    
+            if (IsValidCell(neighborX, neighborZ))
             {
-                neighbors.Add(grid[checkX, checkZ]);
+                neighbors.Add(grid[neighborX, neighborZ]);
             }
         }
-
+    
+        // Aggiungi le celle diagonali solo se entrambe le celle adiacenti sono     percorribili
+        foreach (var (dx, dz, first, second) in diagonalDirections)
+        {
+            int neighborX = currentX + dx;
+            int neighborZ = currentZ + dz;
+    
+            int adjX1 = currentX + first.adjX;
+            int adjZ1 = currentZ + first.adjZ;
+            int adjX2 = currentX + second.adjX;
+            int adjZ2 = currentZ + second.adjZ;
+    
+            // Verifica che la cella diagonale sia valida e che entrambe le celle   adiacenti siano percorribili
+            if (IsValidCell(neighborX, neighborZ) &&
+                IsValidCell(adjX1, adjZ1) &&
+                IsValidCell(adjX2, adjZ2))
+            {
+                neighbors.Add(grid[neighborX, neighborZ]);
+            }
+        }
+    
         return neighbors;
+    }
+    
+    // Verifica se una cella è valida (dentro i limiti e percorribile)
+    private bool IsValidCell(int x, int z)
+    {
+        return x >= 0 && x < grid.GetLength(0) &&
+               z >= 0 && z < grid.GetLength(1) &&
+               grid[x, z].IsWalkable();
     }
 
     // Traccia il percorso (retrocedi dalla destinazione alla partenza)

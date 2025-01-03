@@ -21,10 +21,13 @@ public class MenuReading : MonoBehaviour
     [SerializeField]
     private float menuUpdateCooldown = 600f; // Tempo minimo tra due recuperi consecutivi (in secondi)
 
-    private bool firstRetrieve = false;
-    Dictionary<string, bool> menuItems = new Dictionary<string, bool>();
+    public bool menuReaded = false;
+    public bool firstRetrieve = false;
+    public Dictionary<string, string> menuItems = new Dictionary<string, string>();
 
     private IDriver driver;
+
+    public FoodChooser foodChooser;
 
     async void Start()
     {
@@ -46,11 +49,11 @@ public class MenuReading : MonoBehaviour
         }
     }
 
-    private async Task<Dictionary<string, bool>> RetrieveMenu()
+    private async Task<Dictionary<string, string>> RetrieveMenu()
     {
         Debug.Log("Recupero dei cibi dal database...");
 
-        Dictionary<string, bool> menuItems = new Dictionary<string, bool>();
+        Dictionary<string, string> menuItems = new Dictionary<string, string>();
 
         try
         {
@@ -58,7 +61,8 @@ public class MenuReading : MonoBehaviour
             {
                 var result = await session.ExecuteReadAsync(async tx =>
                 {
-                    var queryResult = await tx.RunAsync("MATCH (item:MENU_ITEM) RETURN item.name AS name, item.available AS available");
+                    //gli elementi solo disponibili facciamo il retrieving
+                    var queryResult = await tx.RunAsync("MATCH (item:MENU_ITEM) WHERE item.available = true RETURN item.name AS name, item.available AS available, item.type AS type");
                     return await queryResult.ToListAsync();
                 });
 
@@ -68,9 +72,14 @@ public class MenuReading : MonoBehaviour
                 {
                     string name = record["name"].As<string>();
                     bool isAvailable = record["available"].As<bool>();
-                    menuItems[name] = isAvailable;
+                    string type = record["type"].As<string>();
 
-                    Debug.Log($"Cibo recuperato: {name}, Disponibile (originale): {isAvailable}");
+                    if (isAvailable) // Solo cibi disponibili
+                    {
+                        menuItems[name] = type;
+                    }
+
+                    Debug.Log($"Cibo recuperato: {name}, Tipo: {type}, Disponibile: {isAvailable}");
                 }
             }
         }
@@ -82,9 +91,10 @@ public class MenuReading : MonoBehaviour
         return menuItems;
     }
 
+
     void Update()
     {
-        if (!isRetrievingMenu && (!firstRetrieve || Time.time - lastMenuUpdateTime > menuUpdateCooldown))
+        if (!isRetrievingMenu && (!firstRetrieve || Time.time - lastMenuUpdateTime > menuUpdateCooldown) && !foodChooser.foodChoosen)
         {
             Debug.Log("ATTENZIONE RETRIEVING AVVIATO: TEMPO PASSATO:"+Time.time+ " LAST UPDATE:"+lastMenuUpdateTime+" COOLDOWN:"+menuUpdateCooldown);
             checkoutDetected = CheckForCheckoutScreens();
@@ -106,11 +116,18 @@ public class MenuReading : MonoBehaviour
         {
             menuItems = retrieveTask.Result;
 
-            string menuText = "CIAO AMICO, il menu aggiornato è il seguente: ";
+            // Creazione del testo del menu
+            string menuText = "CIAO AMICO, il menu aggiornato con solo i cibi disponibili è il seguente: ";
+            List<string> menuTextItems = new List<string>();
+
             foreach (var item in menuItems)
             {
-                menuText += $"{item.Key} - {(item.Value ? "Disponibile" : "Non disponibile")}. ";
+                // Aggiungi ciascun cibo separato da una virgola e uno spazio
+                menuTextItems.Add(item.Key);
             }
+
+            // Concatena tutti gli elementi separati da ", " e aggiungi un punto alla fine
+            menuText += string.Join(", ", menuTextItems) + ".";
 
             if (textToSpeech != null)
             {
@@ -120,6 +137,7 @@ public class MenuReading : MonoBehaviour
             {
                 Debug.LogError("TextToSpeech non è collegato!");
             }
+
         }
         else
         {
@@ -128,6 +146,7 @@ public class MenuReading : MonoBehaviour
 
         isRetrievingMenu = false; // Recupero terminato
         lastMenuUpdateTime = Time.time; // Aggiorna il tempo dell'ultimo recupero
+        menuReaded = true;
     }
 
     private bool CheckForCheckoutScreens()

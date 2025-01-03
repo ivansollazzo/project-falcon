@@ -4,9 +4,9 @@ using System.Collections.Generic;
 public class ParticleFilter : MonoBehaviour 
 {
     [Header("Particle Filter Parameters")]
-    public int numParticles = 100;
-    public float positionNoise = 0.02f;
-    public float measurementNoise = 0.04f;
+    public int numParticles = 1000;
+    public float positionNoise = 0.2f;
+    public float measurementNoise = 0.4f;
 
     private List<ParticleState> previousParticles;
     private List<ParticleState> temporaryParticles;

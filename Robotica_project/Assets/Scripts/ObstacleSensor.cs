@@ -2,62 +2,62 @@ using UnityEngine;
 
 public class ObstacleSensor : MonoBehaviour
 {
-    public float detectionRange = 5.0f;
+    public float detectionDistance = 0.4f; // Distanza massima di rilevamento
     public float detectionAngle = 45.0f; // Angolo del cono di rilevamento
-    public int raysCount = 10; // Numero di raggi nel cono
-    public int verticalLayers = 3; // Numero di livelli verticali
-    public float verticalSpacing = 0.5f; // Spaziatura tra i livelli verticali
-    public LayerMask obstacleLayer;
+    public int raysCount = 10; // Numero di raggi
+    public LayerMask obstacleLayer; // Layer da cui rilevare gli ostacoli
 
-    public Vector3? DetectObstacle()
+    public Vector3? CheckForObstacles()
     {
-        RaycastHit hit;
-        Vector3 direction = transform.forward; // Direzione del sensore
+        // Direzione base (davanti all'oggetto)
+        Vector3 baseDirection = transform.forward;
 
-        for (int layer = 1; layer <= verticalLayers; layer++)
+        // Variabili per il raycast più vicino
+        Collider closestCollider = null;
+        float closestDistance = Mathf.Infinity;
+
+        // Genera raggi distribuiti uniformemente all'interno del cono
+        for (int i = 0; i < raysCount; i++)
         {
-            float heightOffset = layer * verticalSpacing;
+            // Genera un angolo casuale all'interno del cono
+            float angle = Random.Range(-detectionAngle / 2, detectionAngle / 2);
+            float elevation = Random.Range(-detectionAngle / 2, detectionAngle / 2);
 
-            for (int i = 0; i < raysCount; i++)
+            // Calcola la direzione del raggio
+            Quaternion rotation = Quaternion.Euler(elevation, angle, 0);
+            Vector3 rayDirection = rotation * baseDirection;
+
+            // Lancia il raycast con il LayerMask (supporta più layer)
+            if (Physics.Raycast(transform.position, rayDirection, out RaycastHit hit, detectionDistance, obstacleLayer))
             {
-                float angle = Mathf.Lerp(-detectionAngle / 2, detectionAngle / 2, i / (raysCount - 1f));
-                Vector3 rayDirection = Quaternion.Euler(0, angle, 0) * direction;
-                Vector3 rayOrigin = transform.position + Vector3.up * heightOffset;
+                Debug.DrawRay(transform.position, rayDirection * detectionDistance, Color.red);
 
-                if (Physics.Raycast(rayOrigin, rayDirection, out hit, detectionRange, obstacleLayer))
+                // Controlla se il collider colpito è il più vicino
+                if (hit.distance < closestDistance)
                 {
-                    Debug.DrawRay(rayOrigin, rayDirection * detectionRange, Color.magenta, 0.1f); // Visualizza i raggi in viola se rilevano un ostacolo
-                    Debug.Log($"Ostacolo rilevato a distanza: {hit.distance} a altezza: {heightOffset}");
-                    return hit.point;
-                }
-                else
-                {
-                    Debug.DrawRay(rayOrigin, rayDirection * detectionRange, Color.red, 0.1f); // Visualizza i raggi in rosso se non rilevano un ostacolo
+                    closestCollider = hit.collider;
+                    closestDistance = hit.distance;
                 }
             }
         }
 
+        // Se è stato trovato un collider, lo restituisce
+        if (closestCollider != null)
+        {
+            Debug.Log($"Ostacolo più vicino rilevato: {closestCollider.name} alla posizione {closestCollider.transform.position}");
+            return closestCollider.transform.position;
+        }
+
+        // Nessun ostacolo rilevato
         Debug.Log("Nessun ostacolo rilevato.");
         return null;
     }
 
+    // Per fare il test direttamente nella scena
     private void OnDrawGizmos()
     {
-        // Visualizza il cono di rilevamento nel Scene View
+        // Disegna la direzione dei raggi per debug
         Gizmos.color = Color.red;
-        Vector3 direction = transform.forward;
-
-        for (int layer = 1; layer <= verticalLayers; layer++)
-        {
-            float heightOffset = layer * verticalSpacing;
-
-            for (int i = 0; i < raysCount; i++)
-            {
-                float angle = Mathf.Lerp(-detectionAngle / 2, detectionAngle / 2, i / (raysCount - 1f));
-                Vector3 rayDirection = Quaternion.Euler(0, angle, 0) * direction;
-                Vector3 rayOrigin = transform.position + Vector3.up * heightOffset;
-                Gizmos.DrawLine(rayOrigin, rayOrigin + rayDirection * detectionRange);
-            }
-        }
+        Gizmos.DrawRay(transform.position, transform.forward * detectionDistance); // Raggio principale
     }
 }

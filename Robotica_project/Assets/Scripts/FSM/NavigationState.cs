@@ -1,8 +1,5 @@
 using System.Collections.Generic;
-using System.IO;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.AI;
 
 public class NavigationState : State
 {
@@ -58,6 +55,12 @@ public class NavigationState : State
                 {
                     Debug.Log("Ostacolo fisso rilevato. Ripianificazione in corso...");
 
+                    // End all coroutines
+                    robotController.StopAllCoroutines();
+
+                    // Disable obstacle detection
+                    obstaclesDetectionEnabled = false;
+
                     // Transizione allo stato di pianificazione
                     stateMachine.SetState(new PlanningState(stateMachine));
                     return;
@@ -69,7 +72,13 @@ public class NavigationState : State
 
                     if (movedToTarget) {
                         Debug.Log("Posizione punto " + currentCornerIndex + ": " + targetPosition + " raggiunta.");
+                        
                         obstaclesDetectionEnabled = false;
+
+                        // End all coroutines
+                        robotController.StopAllCoroutines();
+
+                        // Move to the next corner
                         currentCornerIndex++;
                     }
                 }
@@ -88,6 +97,9 @@ public class NavigationState : State
 
     public override void ExitState()
     {
+        // Disabilita il movimento
+        robotController.SetMoving(false);
+
         Debug.Log("Exited the NAVIGATION state!");
     }
 }

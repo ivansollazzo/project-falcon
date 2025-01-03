@@ -187,7 +187,7 @@ namespace WaypointsFree
                 RaycastHit hit;
                 if (Physics.Raycast(rayOrigin, dir, out hit, detectionDistance))
                 {
-                    if (hit.collider.CompareTag("Car"))
+                    if (hit.collider.CompareTag("Car") || hit.collider.CompareTag("Player"))
                     {
                         //Debug.Log("Auto rilevata: " + hit.collider.name);
                         Debug.DrawRay(rayOrigin, dir * detectionDistance, Color.blue);

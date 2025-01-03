@@ -43,16 +43,17 @@ public class RobotController : MonoBehaviour
     {
         if (isMoving)
         {
+            Debug.Log("Ruotando verso il target: " + targetPosition);
             Vector3 direction = targetPosition - transform.position;
     
-            if (direction.sqrMagnitude < 0.001f)
+            if (direction.sqrMagnitude < 0.1f)
                 return true;
 
             direction.Normalize();
             Quaternion targetRotation = Quaternion.LookRotation(direction);
             float error = Quaternion.Angle(transform.rotation, targetRotation);
 
-            if (error > 1.0f)
+            if (error >= 0.1f)
             {
                 float rotationSpeed = Time.deltaTime * 360.0f;
                 transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * rotationSpeed);
@@ -69,7 +70,7 @@ public class RobotController : MonoBehaviour
     {
         if (isMoving) 
         {
-            // Calcola la direzione e la distanza verso il target
+            // Calcola la direzione e la distanza verso il target (con l'asse z rivolto verso il target)
             Vector3 directionToTarget = targetPosition - transform.position;
             float distanceToTarget = directionToTarget.magnitude;
 
@@ -92,7 +93,7 @@ public class RobotController : MonoBehaviour
             Debug.DrawLine(estimatedPosition, targetPosition, Color.cyan);
 
             // Controlla se siamo abbastanza vicini alla destinazione
-            if (distanceToTarget < 0.1f) 
+            if (distanceToTarget <= 0.25f) 
             {
                 return true;
             }
@@ -115,7 +116,7 @@ public class RobotController : MonoBehaviour
     public IEnumerator CheckObstacle(System.Action<bool> callback)
     {
         ObstacleSensor obstacleSensor = GetComponent<ObstacleSensor>();
-        Vector3? obstaclePosition = obstacleSensor.DetectObstacle();
+        Vector3? obstaclePosition = obstacleSensor.CheckForObstacles();
         
         if (obstaclePosition != null)
         {
@@ -125,7 +126,7 @@ public class RobotController : MonoBehaviour
             yield return new WaitForSeconds(5);
             
             Debug.Log("Controllo se l'ostacolo si è mosso...");
-            obstaclePosition = obstacleSensor.DetectObstacle();
+            obstaclePosition = obstacleSensor.CheckForObstacles();
             
             if (obstaclePosition != null)
             {

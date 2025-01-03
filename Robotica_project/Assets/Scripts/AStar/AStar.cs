@@ -150,7 +150,7 @@ public class AStar
             }
         }
     
-        // Aggiungi le celle diagonali solo se entrambe le celle adiacenti sono     percorribili
+        // Aggiungi le celle diagonali solo se entrambe le celle adiacenti sono percorribili
         foreach (var (dx, dz, first, second) in diagonalDirections)
         {
             int neighborX = currentX + dx;

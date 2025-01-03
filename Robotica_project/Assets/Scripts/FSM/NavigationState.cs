@@ -10,7 +10,6 @@ public class NavigationState : State
     private RobotController robotController;    
     private bool destinationReached = false;
     private int currentCornerIndex = 0;
-    private float closeEnoughDistance = 0.5f;
 
     private bool obstaclesDetectionEnabled = false;
 
@@ -41,20 +40,6 @@ public class NavigationState : State
     {
         // Ottieni la prossima posizione target dal percorso
         Vector3 targetPosition = path[currentCornerIndex].GetWorldPosition();
-        // Controlla se ci sono altri punti target nella stessa direzione e vai direttamente a quel punto
-        for (int i = currentCornerIndex + 1; i < path.Count; i++)
-        {
-            Vector3 nextPosition = path[i].GetWorldPosition();
-            Vector3 direction = nextPosition - targetPosition;
-            direction.Normalize();
-            Quaternion targetRotation = Quaternion.LookRotation(direction);
-            // Se la direzione è maggiore di una certa soglia, allora non andare direttamente a quel punto
-            if (Quaternion.Angle(robotController.transform.rotation, targetRotation) > 0.25f)
-            {
-                break;
-            }
-            targetPosition = nextPosition;
-        }
         
         // Aggiorna la posizione del robot
         bool rotatedToTarget = robotController.RotateToTarget(targetPosition);

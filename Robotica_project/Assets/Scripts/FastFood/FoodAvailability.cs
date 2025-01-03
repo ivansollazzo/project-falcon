@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 public class FoodAvailability : MonoBehaviour
 {
     private IDriver driver;
-    private IAsyncSession session;
 
     async void Start()
     {
@@ -20,10 +19,7 @@ public class FoodAvailability : MonoBehaviour
         try
         {
             driver = GraphDatabase.Driver(uri, AuthTokens.Basic(user, password));
-            session = driver.AsyncSession();
 
-            Debug.Log("Connessione al database Neo4j in corso...");
-            var result = await session.RunAsync("RETURN 1 AS test");
             Debug.Log("Connessione al database Neo4j riuscita!");
 
             // Avvia la coroutine per aggiornare la disponibilità dei cibi
@@ -41,8 +37,8 @@ public class FoodAvailability : MonoBehaviour
 
         while (true)
         {
-            Debug.Log("Attesa di 30 secondi prima del prossimo aggiornamento...");
-            yield return new WaitForSeconds(600f);
+            Debug.Log("Attesa di 3 minuti prima del prossimo aggiornamento...");
+            yield return new WaitForSeconds(180f);
 
             Debug.Log("Avvio dell'aggiornamento della disponibilità dei cibi...");
 
@@ -83,21 +79,28 @@ public class FoodAvailability : MonoBehaviour
 
         try
         {
-            var result = await session.ExecuteReadAsync(async tx =>
+            using (var session = driver.AsyncSession())
             {
-                var queryResult = await tx.RunAsync("MATCH (item:MENU_ITEM) RETURN item.name AS name, item.available AS available");
-                return await queryResult.ToListAsync();
-            });
+                var result = await session.ExecuteReadAsync(async tx =>
+                {
+                    var queryResult = await tx.RunAsync("MATCH (item:MENU_ITEM) RETURN item.name AS name, item.available AS available");
+                    return await queryResult.ToListAsync();
+                });
 
-            Debug.Log($"Trovati {result.Count} cibi nel database.");
+                Debug.Log($"Trovati {result.Count} cibi nel database.");
 
-            foreach (var record in result)
-            {
-                string name = record["name"].As<string>();
-                bool isAvailable = Random.value > 0.5f; // Genera true o false casualmente
-                menuItems[name] = isAvailable;
+                foreach (var record in result)
+                {
+                    string name = record["name"].As<string>();
+                    
+                    // Cambia la probabilità: solo il 20% di probabilità di essere false
+                    bool isAvailable = Random.value > 0.2f; // Genera true (80%) o false (20%)
+                    
+                    menuItems[name] = isAvailable;
 
-                Debug.Log($"Cibo recuperato: {name}, Disponibile (originale): {record["available"].As<bool>()}, Nuova Disponibilità: {isAvailable}");
+                    Debug.Log($"Cibo recuperato: {name}, Disponibile (originale): {record["available"].As<bool>()}, Nuova Disponibilità: {isAvailable}");
+                }
+
             }
         }
         catch (System.Exception ex)
@@ -114,23 +117,26 @@ public class FoodAvailability : MonoBehaviour
 
         try
         {
-            await session.ExecuteWriteAsync(async tx =>
+            using (var session = driver.AsyncSession())
             {
-                foreach (var item in menuItems)
+                await session.ExecuteWriteAsync(async tx =>
                 {
-                    string name = item.Key;
-                    bool isAvailable = item.Value;
+                    foreach (var item in menuItems)
+                    {
+                        string name = item.Key;
+                        bool isAvailable = item.Value;
 
-                    Debug.Log($"Aggiornamento di '{name}' con disponibilità: {isAvailable}");
+                        Debug.Log($"Aggiornamento di '{name}' con disponibilità: {isAvailable}");
 
-                    await tx.RunAsync(
-                        "MATCH (item:MENU_ITEM {name: $name}) SET item.available = $available",
-                        new { name, available = isAvailable }
-                    );
+                        await tx.RunAsync(
+                            "MATCH (item:MENU_ITEM {name: $name}) SET item.available = $available",
+                            new { name, available = isAvailable }
+                        );
 
-                    Debug.Log($"Cibo aggiornato: {name}, Disponibile: {isAvailable}");
-                }
-            });
+                        Debug.Log($"Cibo aggiornato: {name}, Disponibile: {isAvailable}");
+                    }
+                });
+            }
         }
         catch (System.Exception ex)
         {
@@ -146,12 +152,6 @@ public class FoodAvailability : MonoBehaviour
 
         try
         {
-            if (session != null)
-            {
-                await session.CloseAsync();
-                Debug.Log("Sessione chiusa.");
-            }
-
             if (driver != null)
             {
                 await driver.DisposeAsync();

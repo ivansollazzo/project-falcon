@@ -130,7 +130,7 @@ public class AStar
         };
     
         // Direzioni diagonali
-        (int dx, int dz, (int adjX, int adjZ) first, (int adjX, int adjZ) second)[]     diagonalDirections =
+        (int dx, int dz, (int adjX, int adjZ) first, (int adjX, int adjZ) second)[] diagonalDirections =
         {
             (-1, -1, (-1, 0), (0, -1)), // Nord-Ovest
             (-1, 1, (-1, 0), (0, 1)),  // Nord-Est

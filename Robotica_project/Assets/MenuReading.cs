@@ -15,10 +15,16 @@ public class MenuReading : MonoBehaviour
     public TextToSpeech textToSpeech; // Riferimento alla classe TextToSpeech
 
     private bool checkoutDetected = false; // Stato di rilevamento
+    private bool isRetrievingMenu = false; // Stato per il recupero del menu
+    private float lastMenuUpdateTime = 0f; // Tempo dell'ultimo aggiornamento del menu
+
+    [SerializeField]
+    private float menuUpdateCooldown = 600f; // Tempo minimo tra due recuperi consecutivi (in secondi)
+
+    private bool firstRetrieve = false;
     Dictionary<string, bool> menuItems = new Dictionary<string, bool>();
 
     private IDriver driver;
-    private IAsyncSession session;
 
     async void Start()
     {
@@ -31,10 +37,7 @@ public class MenuReading : MonoBehaviour
         try
         {
             driver = GraphDatabase.Driver(uri, AuthTokens.Basic(user, password));
-            session = driver.AsyncSession();
 
-            Debug.Log("Connessione al database Neo4j in corso...");
-            var result = await session.RunAsync("RETURN 1 AS test");
             Debug.Log("Connessione al database Neo4j riuscita!");
         }
         catch (System.Exception ex)
@@ -51,21 +54,24 @@ public class MenuReading : MonoBehaviour
 
         try
         {
-            var result = await session.ExecuteReadAsync(async tx =>
+            using (var session = driver.AsyncSession())
             {
-                var queryResult = await tx.RunAsync("MATCH (item:MENU_ITEM) RETURN item.name AS name, item.available AS available");
-                return await queryResult.ToListAsync();
-            });
+                var result = await session.ExecuteReadAsync(async tx =>
+                {
+                    var queryResult = await tx.RunAsync("MATCH (item:MENU_ITEM) RETURN item.name AS name, item.available AS available");
+                    return await queryResult.ToListAsync();
+                });
 
-            Debug.Log($"Trovati {result.Count} cibi nel database.");
+                Debug.Log($"Trovati {result.Count} cibi nel database.");
 
-            foreach (var record in result)
-            {
-                string name = record["name"].As<string>();
-                bool isAvailable = record["available"].As<bool>();
-                menuItems[name] = isAvailable;
+                foreach (var record in result)
+                {
+                    string name = record["name"].As<string>();
+                    bool isAvailable = record["available"].As<bool>();
+                    menuItems[name] = isAvailable;
 
-                Debug.Log($"Cibo recuperato: {name}, Disponibile (originale): {isAvailable}");
+                    Debug.Log($"Cibo recuperato: {name}, Disponibile (originale): {isAvailable}");
+                }
             }
         }
         catch (System.Exception ex)
@@ -78,47 +84,51 @@ public class MenuReading : MonoBehaviour
 
     void Update()
     {
-        // Controlla se ci sono "Checkout Screens" vicini
-        checkoutDetected = CheckForCheckoutScreens();
-
-        if (checkoutDetected)
+        if (!isRetrievingMenu && (!firstRetrieve || Time.time - lastMenuUpdateTime > menuUpdateCooldown))
         {
-            Debug.Log("Checkout Screen rilevato! Inizio interazione...");
-            StartCoroutine(RetrieveMenuCoroutine());
+            Debug.Log("ATTENZIONE RETRIEVING AVVIATO: TEMPO PASSATO:"+Time.time+ " LAST UPDATE:"+lastMenuUpdateTime+" COOLDOWN:"+menuUpdateCooldown);
+            checkoutDetected = CheckForCheckoutScreens();
+            if (checkoutDetected){
+                Debug.Log("Checkout Screen rilevato! Inizio interazione...");
+                StartCoroutine(RetrieveMenuCoroutine());
+            }
         }
     }
-private IEnumerator RetrieveMenuCoroutine()
-{
-    var retrieveTask = RetrieveMenu();
-    yield return new WaitUntil(() => retrieveTask.IsCompleted);
 
-    if (retrieveTask.Exception == null)
+    private IEnumerator RetrieveMenuCoroutine()
     {
-        menuItems = retrieveTask.Result;
-        Debug.Log("Menu ricevuto con successo!");
+        firstRetrieve = true;
+        isRetrievingMenu = true; // Imposta lo stato come "recupero in corso"
+        var retrieveTask = RetrieveMenu();
+        yield return new WaitUntil(() => retrieveTask.IsCompleted);
 
-        // Trasforma il menu in una stringa
-        string menuText = "Menu aggiornato: ";
-        foreach (var item in menuItems)
+        if (retrieveTask.Exception == null)
         {
-            menuText += $"{item.Key} - {(item.Value ? "Disponibile" : "Non disponibile")}. ";
-        }
+            menuItems = retrieveTask.Result;
 
-        // Chiama TextToSpeech per pronunciare il menu
-        if (textToSpeech != null)
-        {
-            textToSpeech.StartSpeech(menuText);
+            string menuText = "CIAO AMICO, il menu aggiornato è il seguente: ";
+            foreach (var item in menuItems)
+            {
+                menuText += $"{item.Key} - {(item.Value ? "Disponibile" : "Non disponibile")}. ";
+            }
+
+            if (textToSpeech != null)
+            {
+                textToSpeech.StartSpeech(menuText);
+            }
+            else
+            {
+                Debug.LogError("TextToSpeech non è collegato!");
+            }
         }
         else
         {
-            Debug.LogError("TextToSpeech non è collegato!");
+            Debug.LogError("Errore durante l'aggiornamento del menu: " + retrieveTask.Exception.Message);
         }
+
+        isRetrievingMenu = false; // Recupero terminato
+        lastMenuUpdateTime = Time.time; // Aggiorna il tempo dell'ultimo recupero
     }
-    else
-    {
-        Debug.LogError("Errore durante l'aggiornamento del menu: " + retrieveTask.Exception.Message);
-    }
-}
 
     private bool CheckForCheckoutScreens()
     {
@@ -131,7 +141,6 @@ private IEnumerator RetrieveMenuCoroutine()
 
         for (int i = 0; i < numRays; i++)
         {
-            // Calcola l'angolo per ogni raggio
             float angle = Mathf.Lerp(-halfAngle, halfAngle, (float)i / (numRays - 1));
             Vector3 dir = Quaternion.Euler(0, angle, 0) * rayDirection;
 
@@ -156,5 +165,23 @@ private IEnumerator RetrieveMenuCoroutine()
         }
 
         return screenDetected;
+    }
+
+    async void OnApplicationQuit()
+    {
+        Debug.Log("Chiusura dell'applicazione. Pulizia delle risorse...");
+
+        try
+        {
+            if (driver != null)
+            {
+                await driver.DisposeAsync();
+                Debug.Log("Driver chiuso.");
+            }
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError("Errore durante la chiusura delle risorse: " + ex.Message);
+        }
     }
 }

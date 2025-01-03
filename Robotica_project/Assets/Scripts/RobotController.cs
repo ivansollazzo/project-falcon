@@ -1,35 +1,34 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+
 public class RobotController : MonoBehaviour
 {
     private StateMachine stateMachine;
     private Vector3 destination;
     private bool isMoving = false;
-    private List<Cell> path;
-    private int currentCornerIndex;
+    private ParticleFilter particleFilter;
     
-
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        // Aggiunta del componente StateMachine
         stateMachine = this.gameObject.AddComponent<StateMachine>();
+        particleFilter = this.gameObject.GetComponent<ParticleFilter>();
 
-        // Check if components are assigned
         if (stateMachine == null)
         {
             Debug.LogError("StateMachine is not assigned!");
         }
 
-        // Impostazione dello stato iniziale
+        if (particleFilter == null)
+        {
+            Debug.LogError("ParticleFilter is not assigned!");
+        }
+
         if (stateMachine != null)
         {
-            stateMachine.SetState(new StandbyState(stateMachine));  // Inizia con lo stato Standby
+            stateMachine.SetState(new StandbyState(stateMachine));
         }
     }
 
-    // Funzione per muovere il robot verso la destinazione
     public void SetMoving(bool moving)
     {
         this.isMoving = moving;
@@ -40,76 +39,79 @@ public class RobotController : MonoBehaviour
         return this.isMoving;
     }
 
-    // Metodo per ruotare verso il target
     public bool RotateToTarget(Vector3 targetPosition)
     {
-        // Verifica che il comando di movimento si attivo
         if (isMoving)
         {
             Vector3 direction = targetPosition - transform.position;
     
-            if (direction.sqrMagnitude < 0.001f) // Già allineato
+            if (direction.sqrMagnitude < 0.001f)
                 return true;
 
             direction.Normalize();
             Quaternion targetRotation = Quaternion.LookRotation(direction);
             float error = Quaternion.Angle(transform.rotation, targetRotation);
 
-            if (error > 1.0f) // Aumenta la tolleranza
+            if (error > 1.0f)
             {
-                // Calcola la velocità di rotazione in base all'errore. Adatta la velocità di rotazione in base all'errore.
-                float rotationSpeed = Time.deltaTime * 180.0f;
-
+                float rotationSpeed = Time.deltaTime * 360.0f;
                 transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * rotationSpeed);
                 return false;
             }
 
-            transform.rotation = targetRotation; // Allinea forzatamente
+            transform.rotation = targetRotation;
             return true;
         }
-
         return false;
     }
 
-    public bool MoveToTarget(Vector3 targetPosition)
+    public bool MoveToTarget(Vector3 targetPosition) 
     {
-        // Verifica che il comando di movimento sia attivo
-        if (isMoving)
+        if (isMoving) 
         {
-            // Muoviamo il robot verso il target e calcoliamo l'errore ogni volta. Se l'errore è minore di un certo valore, ritorniamo true, altrimenti false.
-            float error = Vector3.Distance(transform.position, targetPosition);
+            // Calcola la direzione e la distanza verso il target
+            Vector3 directionToTarget = targetPosition - transform.position;
+            float distanceToTarget = directionToTarget.magnitude;
 
-            // Calcola il fattore di interpolazione basato sulla velocità e sulla distanza
-            float t = Mathf.Clamp01(Time.deltaTime / error);
+            // Calcola il controllo di input (movimento desiderato)
+            Vector3 controlInput = transform.position + directionToTarget.normalized * Time.deltaTime;
 
-            // Muove il robot verso il target
-            transform.position = Vector3.Lerp(transform.position, targetPosition, t);
+            // Aggiorna il filtro particellare con il controllo di input e la posizione attuale
+            particleFilter.UpdateParticles(controlInput, transform.position);
 
-            if (error > 0.1f)
+            // Ottieni la posizione stimata dal filtro particellare
+            Vector3 estimatedPosition = particleFilter.EstimatePosition();
+
+            // Calcola la direzione corretta usando la posizione stimata
+            Vector3 correctedDirection = (targetPosition - estimatedPosition).normalized;
+            
+            // Muovi il robot
+            transform.position += correctedDirection * Time.deltaTime;
+
+            Debug.DrawLine(transform.position, estimatedPosition, Color.yellow);
+            Debug.DrawLine(estimatedPosition, targetPosition, Color.cyan);
+
+            // Controlla se siamo abbastanza vicini alla destinazione
+            if (distanceToTarget < 0.1f) 
             {
-                return false;
+                return true;
             }
-
-            return true;
+            return false;
         }
-
         return false;
     }
 
-    // Funzione per impostare la destinazione del robot
     public void SetDestination(Vector3 destination)
     {
         this.destination = destination;
         Debug.Log("Destinazione impostata: " + destination);
     }
 
-    // Funzione per ottenere la destinazione del robot
     public Vector3 GetDestination()
     {
         return this.destination;
     }
 
-    // Funzione per controllare gli ostacoli davanti al robot utilizzando il filtro di Kalman
     public IEnumerator CheckObstacle(System.Action<bool> callback)
     {
         ObstacleSensor obstacleSensor = GetComponent<ObstacleSensor>();
@@ -118,30 +120,21 @@ public class RobotController : MonoBehaviour
         if (obstaclePosition != null)
         {
             Debug.Log("Ostacolo rilevato! Posizione: " + obstaclePosition);
-
             Debug.Log("Aspetto 5 secondi per vedere se l'ostacolo si muove...");
             
             yield return new WaitForSeconds(5);
             
             Debug.Log("Controllo se l'ostacolo si è mosso...");
-            
             obstaclePosition = obstacleSensor.DetectObstacle();
             
             if (obstaclePosition != null)
             {
-
                 Debug.Log("Ostacolo fisso rilevato: " + obstaclePosition.Value);
-
-                // Necessario marcare la cella come non percorribile
                 GridManager.Instance.MarkCellAsBlocked(obstaclePosition.Value);
-
                 callback(true);
-                
                 yield break;
             }
         }
-
         callback(false);
     }
-
 }

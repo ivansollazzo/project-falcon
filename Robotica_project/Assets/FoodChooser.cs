@@ -11,6 +11,8 @@ public class FoodChooser : MonoBehaviour
 
     public bool foodChoosen = false;
 
+    public ThinkingCloudController cloudController; // Riferimento al controller della nuvoletta
+
     private List<string> responses = new List<string>()
     {
         "Mmmmmm.. un attimo che penso a cosa prendere amico!",
@@ -26,6 +28,16 @@ public class FoodChooser : MonoBehaviour
     private float thinkingTimer = 0f; // Timer per il "pensiero"
 
    
+   private void Start()
+{
+    cloudController = GetComponent<ThinkingCloudController>();
+
+    if (cloudController == null)
+    {
+        Debug.LogError("ThinkingCloudController non trovato! Assicurati che sia assegnato al personaggio.");
+    }
+}
+
     private void Update()
     {
         // Se il menu è stato letto e non è stata ancora fatta una scelta
@@ -56,6 +68,8 @@ public class FoodChooser : MonoBehaviour
     {
         isThinking = true;
         string thinkingResponse = GetRandomResponse();
+
+        cloudController?.ShowThinkingCloud();
 
         // Comunica la risposta
         if (ttsManager != null)
@@ -94,6 +108,8 @@ public class FoodChooser : MonoBehaviour
         Debug.Log($"Cibo scelto: Main = {mainChoice}, Side = {sideChoice}, Drink = {drinkChoice}");
 
         string menuChoises = $"Dal menu ho scelto: {mainChoice}, {sideChoice}, {drinkChoice}.";
+
+        cloudController?.HideThinkingCloud();
 
         // Comunica la scelta
         if (ttsManager != null)

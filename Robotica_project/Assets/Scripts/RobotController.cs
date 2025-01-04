@@ -13,6 +13,8 @@ public class RobotController : MonoBehaviour
     private Animator disabledPersonAnimator;
 
     private TTSManager ttsManager;
+
+    private ObstacleSensor obstacleSensor;
     
     void Start()
     {
@@ -20,6 +22,7 @@ public class RobotController : MonoBehaviour
         particleFilter = this.gameObject.GetComponent<ParticleFilter>();
         ttsManager = this.gameObject.GetComponent<TTSManager>();
         disabledPerson = GameObject.Find("DisabledPerson");
+        obstacleSensor = this.gameObject.GetComponent<ObstacleSensor>();
 
         if (stateMachine == null)
         {
@@ -157,51 +160,4 @@ public class RobotController : MonoBehaviour
         return this.destination;
     }
 
-    public IEnumerator CheckObstacle(System.Action<bool> callback)
-    {
-        ObstacleSensor obstacleSensor = GetComponent<ObstacleSensor>();
-        Vector3? obstaclePosition = obstacleSensor.CheckForObstacles();
-        
-        if (obstaclePosition != null)
-        {
-            // Disable the disabled person animator
-            if (this.disabledPersonAnimator != null)
-            {
-                this.disabledPersonAnimator.SetFloat("Speed", 0.0f);
-            }
-
-            ttsManager.Speak("Ho rilevato un ostacolo. Aspetta un attimo per favore!");
-            
-            Debug.Log("Ostacolo rilevato! Posizione: " + obstaclePosition);
-            Debug.Log("Aspetto 5 secondi per vedere se l'ostacolo si muove...");
-            
-            yield return new WaitForSeconds(5);
-            
-            Debug.Log("Controllo se l'ostacolo si è mosso...");
-            obstaclePosition = obstacleSensor.CheckForObstacles();
-            
-            if (obstaclePosition != null)
-            {
-                Debug.Log("Ostacolo fisso rilevato: " + obstaclePosition.Value);
-                GridManager.Instance.MarkCellAsBlocked(obstaclePosition.Value);
-
-                yield return new WaitForSeconds(5);
-
-                ttsManager.Speak("L'ostacolo non si è mosso e blocca il mio percorso. Mi dispiace, aspetta che ripianifico!");
-
-                callback(true);
-                
-                yield break;
-            }
-        }
-        
-        // Enable the disabled person animator
-        if (this.disabledPersonAnimator != null)
-        {
-            this.disabledPersonAnimator.SetFloat("Speed", 1.0f);
-        }
-
-        callback(false);
-    
-    }
 }

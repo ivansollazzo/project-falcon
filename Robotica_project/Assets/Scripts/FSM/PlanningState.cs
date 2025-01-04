@@ -80,7 +80,7 @@ public class PlanningState : State
             PathDrawer pathDrawer = stateMachine.gameObject.AddComponent<PathDrawer>();
             pathDrawer.path = path;
 
-            // Verifichiamo quanto il primo elemento del percorso sia vicino al robot. Nel caso sia troppo vicino, lo rimuoviamo.
+            /* Verifichiamo quanto il primo elemento del percorso sia vicino al robot. Nel caso sia troppo vicino, lo rimuoviamo. */
             if (Vector3.Distance(robotPosition, path[0].GetWorldPosition()) < 0.5f)
             {
                 path.RemoveAt(0);

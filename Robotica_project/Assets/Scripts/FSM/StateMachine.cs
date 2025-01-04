@@ -17,6 +17,11 @@ public class StateMachine : MonoBehaviour
         currentState.EnterState();
     }
 
+    // Function to get the current state
+    public State GetCurrentState() {
+        return currentState;
+    }
+
     private void Update() {
         if (currentState != null) {
             currentState.ExecuteState();

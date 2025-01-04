@@ -10,12 +10,15 @@ public class NavigationState : State
 
     private bool obstaclesDetectionEnabled = false;
 
+    private ObstacleSensor obstacleSensor;
+
     private List<Cell> path;
     
 
     public NavigationState(StateMachine stateMachine,List<Cell>path) : base(stateMachine)
     {
         this.robotController = stateMachine.gameObject.GetComponent<RobotController>();
+        this.obstacleSensor = stateMachine.gameObject.GetComponent<ObstacleSensor>();
         this.path = path;
     }
 
@@ -48,50 +51,34 @@ public class NavigationState : State
 
         if (obstaclesDetectionEnabled)
         {
-            // Controllo se il robot ha ostacoli davanti a se utilizzando il filtro di kalman
-            robotController.StartCoroutine(robotController.CheckObstacle((obstacleMove) =>
-            {
-                if (obstacleMove)
-                {
-                    Debug.Log("Ostacolo fisso rilevato. Ripianificazione in corso...");
+            Vector3? obstaclePosition = obstacleSensor.CheckForObstacles();
+            
+            if (obstaclePosition != null) {
+                Debug.Log("Ostacolo rilevato. Passaggio al waiting state...");
 
-                    // End all coroutines
-                    robotController.StopAllCoroutines();
+                stateMachine.SetState(new WaitingState(stateMachine, 5.0f, this));
+            }
+        }
 
-                    // Disable obstacle detection
-                    obstaclesDetectionEnabled = false;
+        if (rotatedToTarget) {
+            
+            bool movedToTarget = robotController.MoveToTarget(targetPosition);
 
-                    // Transizione allo stato di pianificazione
-                    stateMachine.SetState(new PlanningState(stateMachine));
-                    return;
-                }
-
-                if (rotatedToTarget)
-                {
-                    bool movedToTarget = robotController.MoveToTarget(targetPosition);
-
-                    if (movedToTarget) {
-                        Debug.Log("Posizione punto " + currentCornerIndex + ": " + targetPosition + " raggiunta.");
+            if (movedToTarget) {
+                Debug.Log("Posizione punto " + currentCornerIndex + ": " + targetPosition + " raggiunta.");
                         
-                        obstaclesDetectionEnabled = false;
+                obstaclesDetectionEnabled = false;
 
-                        // End all coroutines
-                        robotController.StopAllCoroutines();
-
-                        // Move to the next corner
-                        currentCornerIndex++;
-                    }
-                }
-
-                if (currentCornerIndex >= path.Count)
-                {
-                    this.destinationReached = true;
-                }
-                if (destinationReached)
-                {
-                    stateMachine.SetState(new ArrivalState(stateMachine));
-                }
-            }));
+                // Move to the next corner
+                currentCornerIndex++;
+            }
+        }
+        if (currentCornerIndex >= path.Count) {
+            this.destinationReached = true;
+        }
+        if (destinationReached)
+        {
+            stateMachine.SetState(new ArrivalState(stateMachine));
         }
     }
 

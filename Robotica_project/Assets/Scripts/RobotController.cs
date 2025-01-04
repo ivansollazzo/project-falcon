@@ -11,11 +11,14 @@ public class RobotController : MonoBehaviour
     private GameObject disabledPerson;
 
     private Animator disabledPersonAnimator;
+
+    private TTSManager ttsManager;
     
     void Start()
     {
         stateMachine = this.gameObject.AddComponent<StateMachine>();
         particleFilter = this.gameObject.GetComponent<ParticleFilter>();
+        ttsManager = this.gameObject.GetComponent<TTSManager>();
         disabledPerson = GameObject.Find("DisabledPerson");
 
         if (stateMachine == null)
@@ -26,6 +29,11 @@ public class RobotController : MonoBehaviour
         if (particleFilter == null)
         {
             Debug.LogError("ParticleFilter is not assigned!");
+        }
+
+        if (ttsManager == null)
+        {
+            Debug.LogError("TTSManager is not assigned!");
         }
 
         if (disabledPerson == null)
@@ -52,6 +60,11 @@ public class RobotController : MonoBehaviour
     public bool IsMoving()
     {
         return this.isMoving;
+    }
+
+    public TTSManager GetTTSManager()
+    {
+        return this.ttsManager;
     }
 
     public bool RotateToTarget(Vector3 targetPosition)
@@ -156,6 +169,8 @@ public class RobotController : MonoBehaviour
             {
                 this.disabledPersonAnimator.SetFloat("Speed", 0.0f);
             }
+
+            ttsManager.Speak("Ho rilevato un ostacolo. Aspetta un attimo per favore!");
             
             Debug.Log("Ostacolo rilevato! Posizione: " + obstaclePosition);
             Debug.Log("Aspetto 5 secondi per vedere se l'ostacolo si muove...");
@@ -169,7 +184,13 @@ public class RobotController : MonoBehaviour
             {
                 Debug.Log("Ostacolo fisso rilevato: " + obstaclePosition.Value);
                 GridManager.Instance.MarkCellAsBlocked(obstaclePosition.Value);
+
+                yield return new WaitForSeconds(5);
+
+                ttsManager.Speak("L'ostacolo non si è mosso e blocca il mio percorso. Mi dispiace, aspetta che ripianifico!");
+
                 callback(true);
+                
                 yield break;
             }
         }

@@ -7,7 +7,7 @@ public class FoodChooser : MonoBehaviour
     [Header("Riferimento al MenuReading")]
     public MenuReading menuReading; // Riferimento allo script MenuReading
 
-    public TextToSpeech textToSpeech; // Riferimento alla classe TextToSpeech
+    public TTSManager ttsManager;
 
     public bool foodChoosen = false;
 
@@ -25,6 +25,7 @@ public class FoodChooser : MonoBehaviour
     private float thinkingTime = 30f;  // Tempo di attesa per il "pensiero"
     private float thinkingTimer = 0f; // Timer per il "pensiero"
 
+   
     private void Update()
     {
         // Se il menu è stato letto e non è stata ancora fatta una scelta
@@ -57,9 +58,9 @@ public class FoodChooser : MonoBehaviour
         string thinkingResponse = GetRandomResponse();
 
         // Comunica la risposta
-        if (textToSpeech != null)
+        if (ttsManager != null)
         {
-            textToSpeech.StartSpeech(thinkingResponse);
+            ttsManager.Speak(thinkingResponse, robotic_voice: false);
         }
         else
         {
@@ -95,9 +96,9 @@ public class FoodChooser : MonoBehaviour
         string menuChoises = $"Dal menu ho scelto: {mainChoice}, {sideChoice}, {drinkChoice}.";
 
         // Comunica la scelta
-        if (textToSpeech != null)
+        if (ttsManager != null)
         {
-            textToSpeech.StartSpeech(menuChoises);
+            ttsManager.Speak(menuChoises, robotic_voice: false);        
         }
         else
         {

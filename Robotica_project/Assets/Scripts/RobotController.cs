@@ -7,11 +7,16 @@ public class RobotController : MonoBehaviour
     private Vector3 destination;
     private bool isMoving = false;
     private ParticleFilter particleFilter;
+
+    private GameObject disabledPerson;
+
+    private Animator disabledPersonAnimator;
     
     void Start()
     {
         stateMachine = this.gameObject.AddComponent<StateMachine>();
         particleFilter = this.gameObject.GetComponent<ParticleFilter>();
+        disabledPerson = GameObject.Find("DisabledPerson");
 
         if (stateMachine == null)
         {
@@ -21,6 +26,16 @@ public class RobotController : MonoBehaviour
         if (particleFilter == null)
         {
             Debug.LogError("ParticleFilter is not assigned!");
+        }
+
+        if (disabledPerson == null)
+        {
+            Debug.LogError("DisabledPerson is not assigned!");
+        }
+        else {
+            // Get the animator
+            disabledPersonAnimator = disabledPerson.GetComponent<Animator>();
+            disabledPersonAnimator.SetFloat("Speed", 0.0f);
         }
 
         if (stateMachine != null)
@@ -43,6 +58,11 @@ public class RobotController : MonoBehaviour
     {
         if (isMoving)
         {
+            if (this.disabledPersonAnimator != null)
+            {
+                this.disabledPersonAnimator.SetFloat("Speed", 0.0f);
+            }
+            
             Debug.Log("Ruotando verso il target: " + targetPosition);
             Vector3 direction = targetPosition - transform.position;
     
@@ -70,6 +90,11 @@ public class RobotController : MonoBehaviour
     {
         if (isMoving) 
         {
+            if (this.disabledPersonAnimator != null)
+            {
+                this.disabledPersonAnimator.SetFloat("Speed", 1.0f);
+            }
+
             // Calcola la direzione e la distanza verso il target (con l'asse z rivolto verso il target)
             Vector3 directionToTarget = targetPosition - transform.position;
             float distanceToTarget = directionToTarget.magnitude;
@@ -95,10 +120,16 @@ public class RobotController : MonoBehaviour
             // Controlla se siamo abbastanza vicini alla destinazione
             if (distanceToTarget <= 0.25f) 
             {
+                if (this.disabledPersonAnimator != null)
+                {
+                    this.disabledPersonAnimator.SetFloat("Speed", 0.0f);
+                }
+                
                 return true;
             }
             return false;
         }
+
         return false;
     }
 
@@ -120,6 +151,12 @@ public class RobotController : MonoBehaviour
         
         if (obstaclePosition != null)
         {
+            // Disable the disabled person animator
+            if (this.disabledPersonAnimator != null)
+            {
+                this.disabledPersonAnimator.SetFloat("Speed", 0.0f);
+            }
+            
             Debug.Log("Ostacolo rilevato! Posizione: " + obstaclePosition);
             Debug.Log("Aspetto 5 secondi per vedere se l'ostacolo si muove...");
             
@@ -136,6 +173,14 @@ public class RobotController : MonoBehaviour
                 yield break;
             }
         }
+        
+        // Enable the disabled person animator
+        if (this.disabledPersonAnimator != null)
+        {
+            this.disabledPersonAnimator.SetFloat("Speed", 1.0f);
+        }
+
         callback(false);
+    
     }
 }

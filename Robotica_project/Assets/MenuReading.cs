@@ -12,7 +12,7 @@ public class MenuReading : MonoBehaviour
     public int numRays = 20; // Numero di raggi nel cono
 
     [Header("Riferimento al TextToSpeech")]
-    public TextToSpeech textToSpeech; // Riferimento alla classe TextToSpeech
+    public TTSManager ttsManager;
 
     private bool checkoutDetected = false; // Stato di rilevamento
     private bool isRetrievingMenu = false; // Stato per il recupero del menu
@@ -129,9 +129,9 @@ public class MenuReading : MonoBehaviour
             // Concatena tutti gli elementi separati da ", " e aggiungi un punto alla fine
             menuText += string.Join(", ", menuTextItems) + ".";
 
-            if (textToSpeech != null)
+            if (ttsManager != null)
             {
-                textToSpeech.StartSpeech(menuText);
+                ttsManager.Speak(menuText, robotic_voice: false);
             }
             else
             {

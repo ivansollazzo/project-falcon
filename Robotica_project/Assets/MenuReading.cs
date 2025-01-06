@@ -31,9 +31,10 @@ public class MenuReading : MonoBehaviour
 
     async void Start()
     {
-        string uri = "bolt://192.168.31.100:7687";
+        string uri = "bolt://localhost:7689";
         string user = "neo4j";
-        string password = "fr0stus3r";
+        string password = "PeraCotta10$";
+
 
         Debug.Log("Inizializzazione del driver Neo4j...");
 

@@ -69,7 +69,7 @@ public class FoodChooser : MonoBehaviour
         isThinking = true;
         string thinkingResponse = GetRandomResponse();
 
-        cloudController?.ShowThinkingCloud();
+        cloudController?.ShowCloud();
 
         // Comunica la risposta
         if (ttsManager != null)
@@ -109,7 +109,7 @@ public class FoodChooser : MonoBehaviour
 
         string menuChoises = $"Dal menu ho scelto: {mainChoice}, {sideChoice}, {drinkChoice}.";
 
-        cloudController?.HideThinkingCloud();
+        cloudController?.HideCloud();
 
         // Comunica la scelta
         if (ttsManager != null)

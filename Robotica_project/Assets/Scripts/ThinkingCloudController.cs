@@ -2,44 +2,51 @@ using UnityEngine;
 
 public class ThinkingCloudController : MonoBehaviour
 {
-    public GameObject thinkingCloud; // Riferimento alla nuvoletta
+    public GameObject thinkingCloud; // Riferimento al GameObject della nuvoletta
     private Animator cloudAnimator; // Riferimento all'Animator
 
-    void Start()
+    private void Start()
     {
-        // Ottieni il componente Animator dalla nuvoletta
-        if (thinkingCloud != null)
+        if (thinkingCloud == null)
         {
-            cloudAnimator = thinkingCloud.GetComponent<Animator>();
+            Debug.LogError("ThinkingCloud non assegnato! Per favore assegna il GameObject della nuvoletta.");
+            return;
+        }
+
+        cloudAnimator = thinkingCloud.GetComponent<Animator>();
+
+        if (cloudAnimator == null)
+        {
+            Debug.LogError("Nessun componente Animator trovato su ThinkingCloud!");
+        }
+
+        // Nascondi la nuvoletta all'inizio
+        thinkingCloud.SetActive(false);
+    }
+
+    // Mostra la nuvoletta
+    public void ShowCloud()
+    {
+        if (cloudAnimator != null)
+        {
+            thinkingCloud.SetActive(true); // Attiva il GameObject
+            cloudAnimator.SetTrigger("Show"); // Attiva il trigger Show
         }
     }
 
-    public void ShowThinkingCloud()
+    // Nascondi la nuvoletta
+    public void HideCloud()
     {
-        if (thinkingCloud != null)
+        if (cloudAnimator != null)
         {
-            thinkingCloud.SetActive(true); // Attiva la nuvoletta
-            if (cloudAnimator != null)
-            {
-                cloudAnimator.SetTrigger("Show"); // Avvia l'animazione di comparsa
-            }
+            cloudAnimator.SetTrigger("Hide"); // Attiva il trigger Hide
+            Invoke(nameof(DeactivateCloud), 0.5f); // Disattiva dopo la durata dell'animazione
         }
     }
 
-    public void HideThinkingCloud()
+    // Disattiva il GameObject della nuvoletta
+    private void DeactivateCloud()
     {
-        if (thinkingCloud != null)
-        {
-            if (cloudAnimator != null)
-            {
-                cloudAnimator.SetTrigger("Hide"); // Avvia l'animazione di scomparsa
-            }
-            Invoke(nameof(DisableCloud), 1f); // Disattiva dopo l'animazione
-        }
-    }
-
-    private void DisableCloud()
-    {
-        thinkingCloud.SetActive(false); // Disattiva la nuvoletta
+        thinkingCloud.SetActive(false);
     }
 }

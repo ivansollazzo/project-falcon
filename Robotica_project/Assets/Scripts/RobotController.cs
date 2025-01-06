@@ -70,6 +70,11 @@ public class RobotController : MonoBehaviour
         return this.ttsManager;
     }
 
+    public ObstacleSensor GetObstacleSensor()
+    {
+        return this.obstacleSensor;
+    }
+
     public bool RotateToTarget(Vector3 targetPosition)
     {
         if (isMoving)
@@ -80,25 +85,25 @@ public class RobotController : MonoBehaviour
             }
             
             Debug.Log("Ruotando verso il target: " + targetPosition);
+            
+            // Calculate the direction to the target
             Vector3 direction = targetPosition - transform.position;
-    
-            if (direction.sqrMagnitude < 0.1f)
-                return true;
-
             direction.Normalize();
+
+            // Calculate the error
             Quaternion targetRotation = Quaternion.LookRotation(direction);
             float error = Quaternion.Angle(transform.rotation, targetRotation);
 
-            if (error >= 0.1f)
+            if (error >= 0.01f)
             {
                 float rotationSpeed = Time.deltaTime * 360.0f;
                 transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * rotationSpeed);
                 return false;
             }
-
-            transform.rotation = targetRotation;
+            
             return true;
         }
+        
         return false;
     }
 

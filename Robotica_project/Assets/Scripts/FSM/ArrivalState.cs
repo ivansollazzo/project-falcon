@@ -20,6 +20,10 @@ public class ArrivalState : State
 
         Debug.Log("Arrivato! Pronto per la prossima Destinazione");
         stateMachine.SetState(new StandbyState(stateMachine));
+
+        // Destroy the current grid
+        GridManager.Instance.GenerateGrid();
+        GridManager.Instance.DetectBlockedCells();
     }
 
     public override void ExitState()

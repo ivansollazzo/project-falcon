@@ -1,7 +1,10 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class WaitingState : State {
     private RobotController robotController;
+    
+    private ObstacleSensor obstacleSensor;
 
     private NavigationState currentNavigationState;
 
@@ -11,6 +14,7 @@ public class WaitingState : State {
 
     public WaitingState(StateMachine stateMachine, float waitingTime, NavigationState navigationState) : base(stateMachine) {
         this.robotController = stateMachine.gameObject.GetComponent<RobotController>();
+        this.obstacleSensor = robotController.GetObstacleSensor();
         this.waitingTime = waitingTime;
         this.currentNavigationState = navigationState;
         robotController.SetMoving(false);
@@ -23,12 +27,14 @@ public class WaitingState : State {
     }
 
     public override void ExecuteState() {
+        
         // Check if the obstacle has been removed
-        Collider detectedObstacle = stateMachine.gameObject.GetComponent<ObstacleSensor>().CheckForObstacles();
+        Collider detectedObstacle = obstacleSensor.CheckForObstacles();
 
         elapsedTime += Time.deltaTime;
 
         if (elapsedTime >= waitingTime) {
+            
             ttsManager.Speak("Tempo di attesa scaduto. Ripianifico il percorso.");
 
             // We calculate the min and max cells occupied by the obstacle
@@ -77,11 +83,37 @@ public class WaitingState : State {
                     // Check if it's inside the obstacle bounds
                     if (detectedObstacle.bounds.Contains(cell.GetWorldPosition())) {
                         // Mark the cell as blocked
-                        Debug.Log("Marking cell as blocked: " + cell);
                         GridManager.Instance.MarkCellAsBlocked(cell);
+
+                        // We also block the adjacent cells
+                        List <Cell> adjCells = new List<Cell>();
+
+                        adjCells.Add(GridManager.Instance.GetGrid()[x - 1, z - 1]);
+                        adjCells.Add(GridManager.Instance.GetGrid()[x + 1, z + 1]);
+                        adjCells.Add(GridManager.Instance.GetGrid()[x - 1, z]);
+                        adjCells.Add(GridManager.Instance.GetGrid()[x + 1, z]);
+                        adjCells.Add(GridManager.Instance.GetGrid()[x, z - 1]);
+                        adjCells.Add(GridManager.Instance.GetGrid()[x, z + 1]);
+                        adjCells.Add(GridManager.Instance.GetGrid()[x - 1, z + 1]);
+                        adjCells.Add(GridManager.Instance.GetGrid()[x + 1, z - 1]);
+
+                        foreach (Cell adjCell in adjCells) {
+                            if (adjCell != null) {
+
+                                // Get the destination cell
+                                Cell endCell = GridManager.Instance.GetCellFromWorldPosition(robotController.GetDestination());
+
+                                if (adjCell.GetWorldPosition() != endCell.GetWorldPosition()) {
+                                    GridManager.Instance.MarkCellAsBlocked(adjCell);
+                                }               
+                            }
+                        }                       
                     }
                 }
             }
+
+            // Disable the sensors
+            obstacleSensor.EnableSensor(false);
 
             stateMachine.SetState(new PlanningState(stateMachine));
         }

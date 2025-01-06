@@ -81,7 +81,7 @@ public class PlanningState : State
             pathDrawer.path = path;
 
             /* Verifichiamo quanto il primo elemento del percorso sia vicino al robot. Nel caso sia troppo vicino, lo rimuoviamo. */
-            if (Vector3.Distance(robotPosition, path[0].GetWorldPosition()) < 0.5f)
+            if (Vector3.Distance(robotPosition, path[0].GetWorldPosition()) < 1.0f)
             {
                 path.RemoveAt(0);
             }

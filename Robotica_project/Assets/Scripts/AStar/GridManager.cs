@@ -62,7 +62,7 @@ public class GridManager : MonoBehaviour
         return transform.rotation * position;
     }
 
-    void DetectBlockedCells()
+    public void DetectBlockedCells()
     {
         // Trova tutti gli oggetti con il tag "BlockedCell" nella scena
         GameObject[] blockedObjects = GameObject.FindGameObjectsWithTag("BlockedCell");

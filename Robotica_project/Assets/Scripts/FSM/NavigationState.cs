@@ -8,8 +8,6 @@ public class NavigationState : State
     private bool destinationReached = false;
     private int currentCornerIndex = 0;
 
-    private bool obstaclesDetectionEnabled = false;
-
     private ObstacleSensor obstacleSensor;
 
     private List<Cell> path;
@@ -18,7 +16,7 @@ public class NavigationState : State
     public NavigationState(StateMachine stateMachine,List<Cell>path) : base(stateMachine)
     {
         this.robotController = stateMachine.gameObject.GetComponent<RobotController>();
-        this.obstacleSensor = stateMachine.gameObject.GetComponent<ObstacleSensor>();
+        this.obstacleSensor = robotController.GetObstacleSensor();
         this.path = path;
     }
 
@@ -34,6 +32,9 @@ public class NavigationState : State
 
         // Imposta il comando di navigazione
         robotController.SetMoving(true);
+
+        // Disable obstacle detection (temporarily)
+        obstacleSensor.EnableSensor(false);
     }
 
     public override void ExecuteState()
@@ -46,10 +47,10 @@ public class NavigationState : State
 
         if (rotatedToTarget) {
             // Enable obstacle detection
-            obstaclesDetectionEnabled = true;
+            obstacleSensor.EnableSensor(true);
         }
 
-        if (obstaclesDetectionEnabled)
+        if (obstacleSensor.IsSensorEnabled())
         {
             Collider detectedObstacle = obstacleSensor.CheckForObstacles();
             
@@ -67,7 +68,8 @@ public class NavigationState : State
             if (movedToTarget) {
                 Debug.Log("Posizione punto " + currentCornerIndex + ": " + targetPosition + " raggiunta.");
                         
-                obstaclesDetectionEnabled = false;
+                // Disable sensors
+                obstacleSensor.EnableSensor(false);
 
                 // Move to the next corner
                 currentCornerIndex++;

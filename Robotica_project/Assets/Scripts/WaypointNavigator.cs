@@ -27,7 +27,7 @@ public class WaypointNavigator : MonoBehaviour
         if (controller.reachedDestination)
         {
             bool shouldBranch = false;
-            if(currrentWaypoint.branches !=null && currrentWaypoint.branches.Count > 0)
+            if(currrentWaypoint.branches != null && currrentWaypoint.branches.Count > 0)
             {
                 shouldBranch = Random.Range(0f,1f) <= currrentWaypoint.branchRatio? true : false;
             }

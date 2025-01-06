@@ -56,6 +56,18 @@ public class Cell
             return this.gCost + this.hCost;
         }
 
+        // Metodo per ottenere X della cella
+        public int GetX()
+        {
+            return this.x;
+        }
+
+        // Metodo per ottenere Z della cella
+        public int GetZ()
+        {
+            return this.z;
+        }
+
         // Metodo per ottenere il gCost della cella
         public float GetGCost()
         {

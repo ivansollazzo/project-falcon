@@ -51,9 +51,9 @@ public class NavigationState : State
 
         if (obstaclesDetectionEnabled)
         {
-            Vector3? obstaclePosition = obstacleSensor.CheckForObstacles();
+            Collider detectedObstacle = obstacleSensor.CheckForObstacles();
             
-            if (obstaclePosition != null) {
+            if (detectedObstacle != null) {
                 Debug.Log("Ostacolo rilevato. Passaggio al waiting state...");
 
                 stateMachine.SetState(new WaitingState(stateMachine, 5.0f, this));

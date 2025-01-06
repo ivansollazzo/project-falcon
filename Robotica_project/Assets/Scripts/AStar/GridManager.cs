@@ -124,6 +124,19 @@ public class GridManager : MonoBehaviour
         }
     }
 
+    public void MarkCellAsBlocked(Cell cell)
+    {
+        if (cell != null)
+        {
+            cell.SetWalkable(false);
+            cell.SetGCost(float.MaxValue);
+            Debug.Log("Cella marcata come bloccata: " + cell);
+        }
+        else {
+            Debug.LogError("Nessuna cella trovata alla posizione specificata: " + cell.GetWorldPosition());
+        }
+    }
+
     public Cell GetCellFromWorldPosition(Vector3 position)
     {
         Cell closestCell = null;

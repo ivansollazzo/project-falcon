@@ -97,7 +97,7 @@ public class MenuReading : MonoBehaviour
     {
         if (!isRetrievingMenu && (!firstRetrieve || Time.time - lastMenuUpdateTime > menuUpdateCooldown) && !foodChooser.foodChoosen)
         {
-            Debug.Log("ATTENZIONE RETRIEVING AVVIATO: TEMPO PASSATO:"+Time.time+ " LAST UPDATE:"+lastMenuUpdateTime+" COOLDOWN:"+menuUpdateCooldown);
+            //Debug.Log("ATTENZIONE RETRIEVING AVVIATO: TEMPO PASSATO:"+Time.time+ " LAST UPDATE:"+lastMenuUpdateTime+" COOLDOWN:"+menuUpdateCooldown);
             checkoutDetected = CheckForCheckoutScreens();
             if (checkoutDetected){
                 Debug.Log("Checkout Screen rilevato! Inizio interazione...");

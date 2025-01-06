@@ -10,10 +10,9 @@ public class FoodAvailability : MonoBehaviour
 
     async void Start()
     {
-          string uri = "bolt://localhost:7689";
+        string uri = "bolt://localhost:7689";
         string user = "neo4j";
         string password = "PeraCotta10$";
-
 
         Debug.Log("Inizializzazione del driver Neo4j...");
 

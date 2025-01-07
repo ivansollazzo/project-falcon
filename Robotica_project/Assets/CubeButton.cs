@@ -61,14 +61,20 @@ public class CubeButton : MonoBehaviour
                 return;
             }
 
+            // Use RaycastAll
             Ray ray = myCamera.ScreenPointToRay(Input.mousePosition);
-            if (Physics.Raycast(ray, out RaycastHit hit))
+            RaycastHit[] hits = Physics.RaycastAll(ray);
+
+            foreach (RaycastHit hit in hits)
             {
-                if (hit.transform == transform) // Controlla se è il bottone
+                if (hit.collider == GetComponent<Collider>())
                 {
+                    Debug.Log("Log di onbuttonclicked!");
                     OnButtonClicked();
+                    break;
                 }
             }
+
         }
     }
 }

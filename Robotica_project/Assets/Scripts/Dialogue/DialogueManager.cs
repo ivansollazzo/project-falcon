@@ -4,6 +4,7 @@ using TMPro;
 using System.Collections.Generic;
 using UnityEngine.EventSystems;
 using System.Collections;
+using UnityEngine.UI;
 
 public class DialogueManager : MonoBehaviour
 {
@@ -18,7 +19,9 @@ public class DialogueManager : MonoBehaviour
 
     private Story currentStory;
 
-    private bool isDialogueActive;
+    public bool isDialogueActive;
+    private Button currentChoiceButton;
+
 
     private void Awake()
     {
@@ -54,6 +57,11 @@ public class DialogueManager : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.Space))
         {
             ContinueStory();
+        }
+        // Gestisce il click destro del mouse
+        if (Input.GetMouseButtonDown(1))
+        {
+            SelectHighlightedChoice();
         }
     }
 
@@ -92,21 +100,47 @@ public class DialogueManager : MonoBehaviour
     }
 
     private void DisplayChoices()
+{
+    Choice currentChoice = currentStory.currentChoices[0]; // Hai sempre e solo una scelta
+
+    if (currentChoice == null)
     {
-        Choice currentChoise = currentStory.currentChoices[0];
-
-        if(currentChoise == null)
-        {
-            Debug.LogWarning("Nessuna scelta trovata!");
-            return;
-        }
-        
-        vocalChoice.gameObject.SetActive(true);
-        vocalChoiceText.text = currentChoise.text;
-
-        StartCoroutine(SelectChoice());
-
+        Debug.LogWarning("Nessuna scelta trovata!");
+        return;
     }
+
+    // Attiva il bottone e mostra il testo
+    vocalChoice.gameObject.SetActive(true);
+    vocalChoiceText.text = currentChoice.text;
+
+    // Ottieni il componente Button del vocalChoice
+    currentChoiceButton = vocalChoice.GetComponent<Button>();
+
+    if (currentChoiceButton != null)
+{
+    // Ottieni il componente OnClickScript associato al bottone
+    OnClickScript onClickScript = currentChoiceButton.GetComponent<OnClickScript>();
+
+    if (onClickScript != null)
+    {
+        // Aggiungi il listener per il metodo OnButtonClick dello script OnClickScript
+        currentChoiceButton.onClick.RemoveAllListeners();
+        currentChoiceButton.onClick.AddListener(() =>
+        {
+            onClickScript.OnButtonClick();
+        });
+    }
+    else
+    {
+        Debug.LogWarning("OnClickScript non trovato sul bottone vocalChoice!");
+    }
+}
+
+
+    // Seleziona la scelta nel sistema di input
+    StartCoroutine(SelectChoice());
+}
+
 
     private IEnumerator SelectChoice()
     {
@@ -119,4 +153,28 @@ public class DialogueManager : MonoBehaviour
     {
         currentStory.ChooseChoiceIndex(choiceIndex);
     }
+
+    private void SelectHighlightedChoice()
+{
+    if (currentStory.currentChoices.Count > 0)
+    {
+        // Fai la scelta con Ink
+        MakeChoice(0);
+
+        // Simula il click sul bottone associato (se esiste)
+        if (currentChoiceButton != null)
+        {
+            currentChoiceButton.onClick.Invoke();
+        }
+
+        // Continua la storia
+        ContinueStory();
+    }
+    else
+    {
+        Debug.LogWarning("Nessuna scelta selezionabile al momento!");
+    }
+}
+
+
 }

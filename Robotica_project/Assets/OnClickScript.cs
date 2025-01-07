@@ -15,6 +15,9 @@ public class OnClickScript : MonoBehaviour
     // Metodo chiamato quando il bottone viene cliccato
     public void OnButtonClick()
     {
+        
+        Debug.Log("Scelta button cliccata");
+
         if (sttTestObject != null)
         {
             // Ottieni il componente STTTest dal GameObject

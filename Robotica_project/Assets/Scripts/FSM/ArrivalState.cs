@@ -19,7 +19,16 @@ public class ArrivalState : State
         ttsManager.Speak("Sei arrivato a destinazione!");
 
         Debug.Log("Arrivato! Pronto per la prossima Destinazione");
+        robotController.ClearDestination();
         stateMachine.SetState(new StandbyState(stateMachine));
+
+        // Se ci sono path drawer, li rimuovo
+        PathDrawer[] pathDrawers = stateMachine.gameObject.GetComponents<PathDrawer>();
+        foreach (PathDrawer pathDrawer in pathDrawers)
+        {
+            pathDrawer.ClearPath();
+            GameObject.Destroy(pathDrawer);
+        }
 
         // Destroy the current grid
         GridManager.Instance.GenerateGrid();

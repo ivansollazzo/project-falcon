@@ -23,6 +23,12 @@ namespace SojaExiles
         // Update is called once per frame
         void Update()
         {
+
+            if (DialogueManager.GetInstance().isDialogueActive)
+            {
+                return;
+            }
+
             float mouseX = Input.GetAxis("Mouse X") * mouseXSensitivity * Time.deltaTime;
             float mouseY = Input.GetAxis("Mouse Y") * mouseXSensitivity * Time.deltaTime;
 

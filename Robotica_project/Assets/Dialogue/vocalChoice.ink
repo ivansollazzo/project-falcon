@@ -6,5 +6,5 @@ Benvenuto all' UAITF Fastfood!, cosa vuoi fare? Seleziona il bottone "Vocal choi
     ->chosen("Vocal Choice")
 
 === chosen(chosenX) ===
-You chose {chosenX}!
+Hai scelto {chosenX}!
 -> END

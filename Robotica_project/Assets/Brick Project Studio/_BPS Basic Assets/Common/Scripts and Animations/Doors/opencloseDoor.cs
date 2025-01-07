@@ -17,29 +17,23 @@ namespace SojaExiles
 			open = false;
 		}
 
-		void OnMouseOver()
+		void Update()
 		{
 			{
 				if (Player)
 				{
 					float dist = Vector3.Distance(Player.position, transform.position);
-					if (dist < 15)
+					if (dist < 0.5f)
 					{
 						if (open == false)
 						{
-							if (Input.GetMouseButtonDown(0))
-							{
-								StartCoroutine(opening());
-							}
+							StartCoroutine(opening());
 						}
 						else
 						{
 							if (open == true)
 							{
-								if (Input.GetMouseButtonDown(0))
-								{
-									StartCoroutine(closing());
-								}
+								StartCoroutine(closing());
 							}
 
 						}

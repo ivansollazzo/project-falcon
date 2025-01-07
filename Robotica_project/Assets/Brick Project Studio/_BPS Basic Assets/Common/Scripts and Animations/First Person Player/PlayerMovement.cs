@@ -21,6 +21,11 @@ namespace SojaExiles
         void Update()
         {
 
+            if (DialogueManager.GetInstance().isDialogueActive)
+            {
+                return;
+            }
+
             float x = Input.GetAxis("Horizontal");
             float z = Input.GetAxis("Vertical");
 

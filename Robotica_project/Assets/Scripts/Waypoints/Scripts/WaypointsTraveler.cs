@@ -151,7 +151,7 @@ namespace WaypointsFree
                 RaycastHit hit;
                 if (Physics.Raycast(rayOrigin, dir, out hit, detectionDistance))
                 {
-                    if (hit.collider.CompareTag("Pedestrian"))
+                    if (hit.collider.CompareTag("Pedestrian") && !hit.collider.CompareTag("BlockedCell"))
                     {
                         //Debug.Log("Pedone rilevato: " + hit.collider.name);
                         Debug.DrawRay(rayOrigin, dir * detectionDistance, Color.red);
@@ -169,7 +169,7 @@ namespace WaypointsFree
 
         private bool CheckForCars()
         {
-            float detectionDistance = 5f; // Distanza di rilevamento per le auto
+            float detectionDistance = 2.5f; // Distanza di rilevamento per le auto
             float coneAngle = 10f; // Angolo del cono per le auto
             int numRays = 10; // Numero di raggi nel cono
             Vector3 rayOrigin = transform.position;
@@ -187,7 +187,7 @@ namespace WaypointsFree
                 RaycastHit hit;
                 if (Physics.Raycast(rayOrigin, dir, out hit, detectionDistance))
                 {
-                    if (hit.collider.CompareTag("Car") || hit.collider.CompareTag("Player"))
+                    if (!hit.collider.CompareTag("Pedestrian") && !hit.collider.CompareTag("BlockedCell"))
                     {
                         //Debug.Log("Auto rilevata: " + hit.collider.name);
                         Debug.DrawRay(rayOrigin, dir * detectionDistance, Color.blue);

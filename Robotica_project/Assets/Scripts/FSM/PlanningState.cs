@@ -31,6 +31,7 @@ public class PlanningState : State
         PathDrawer[] pathDrawers = stateMachine.gameObject.GetComponents<PathDrawer>();
         foreach (PathDrawer pathDrawer in pathDrawers)
         {
+            pathDrawer.ClearPath();
             GameObject.Destroy(pathDrawer);
         }
 
@@ -78,7 +79,7 @@ public class PlanningState : State
 
             // Disegna il percorso
             PathDrawer pathDrawer = stateMachine.gameObject.AddComponent<PathDrawer>();
-            pathDrawer.path = path;
+            pathDrawer.DrawPath(path);
 
             /* Verifichiamo quanto il primo elemento del percorso sia vicino al robot. Nel caso sia troppo vicino, lo rimuoviamo. */
             if (Vector3.Distance(robotPosition, path[0].GetWorldPosition()) < 1.0f)

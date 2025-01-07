@@ -15,6 +15,8 @@ public class RobotController : MonoBehaviour
     private TTSManager ttsManager;
 
     private ObstacleSensor obstacleSensor;
+
+    private bool destinationSet = false;
     
     void Start()
     {
@@ -107,6 +109,11 @@ public class RobotController : MonoBehaviour
         return false;
     }
 
+    public bool IsDestinationSet()
+    {
+        return this.destinationSet;
+    }
+
     public bool MoveToTarget(Vector3 targetPosition) 
     {
         if (isMoving) 
@@ -156,13 +163,26 @@ public class RobotController : MonoBehaviour
 
     public void SetDestination(Vector3 destination)
     {
-        this.destination = destination;
+        Vector3 gridDestination = new Vector3(destination.x, -0.01f, destination.z);
+        this.destination = gridDestination;
+        destinationSet = true;
         Debug.Log("Destinazione impostata: " + destination);
+    }
+
+    public void ClearDestination()
+    {
+        this.destination = Vector3.zero;
+        destinationSet = false;
     }
 
     public Vector3 GetDestination()
     {
         return this.destination;
+    }
+
+    public StateMachine GetStateMachine()
+    {
+        return this.stateMachine;
     }
 
 }

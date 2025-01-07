@@ -20,17 +20,8 @@ public class StandbyState : State
 
     public override void ExecuteState()
     {
-        // Imposta destinazione
-        if (Input.GetMouseButtonDown(0))
-        {
-            Vector3 destination = GetDestinationFromMouseClick();
-            Vector3 gridDestination = new Vector3(destination.x, -0.01f, destination.z);
-            robotController.SetDestination(gridDestination);
-            destinationSet = true;
-        }
-
-        // Passa a PlanningState
-        if (destinationSet)
+        // Passa a PlanningState se la destinazione è stata impostata
+        if (robotController.IsDestinationSet())
         {
             stateMachine.SetState(new PlanningState(stateMachine));
         }

@@ -16,7 +16,7 @@ public class WaypointNavigator : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        direction = Mathf.RoundToInt(Random.Range(0f,1f));
+        direction = 0;
 
         controller.SetDestination(currrentWaypoint.GetPosition());
     }

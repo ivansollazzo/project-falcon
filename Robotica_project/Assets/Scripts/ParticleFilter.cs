@@ -1,12 +1,13 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System.Threading.Tasks;  // Per la parallelizzazione
 
-public class ParticleFilter : MonoBehaviour 
+public class ParticleFilter : MonoBehaviour
 {
     [Header("Particle Filter Parameters")]
-    public int numParticles = 1000;
-    public float positionNoise = 0.2f;
-    public float measurementNoise = 0.4f;
+    public int numParticles = 1000; // Ridotto il numero di particelle per migliorare la velocità
+    public float positionNoise = 0.1f;
+    public float measurementNoise = 0.1f;
 
     private List<ParticleState> previousParticles;
     private List<ParticleState> temporaryParticles;
@@ -37,11 +38,11 @@ public class ParticleFilter : MonoBehaviour
         currentParticles = new List<ParticleState>();
 
         Vector3 initialPosition = transform.position;
-        
+
         for (int i = 0; i < numParticles; i++)
         {
             previousParticles.Add(new ParticleState(
-                initialPosition + Random.insideUnitSphere * positionNoise,
+                initialPosition + Random.insideUnitSphere * positionNoise,  // Qui la generazione è ancora nel thread principale
                 1f / numParticles
             ));
         }
@@ -53,45 +54,75 @@ public class ParticleFilter : MonoBehaviour
         currentParticles.Clear();
 
         float totalWeight = 0f;
-        
+
+        // Genera un array di rumori per ogni particella prima di avviare il thread parallelo
+        Vector3[] noiseArray = new Vector3[numParticles];
         for (int i = 0; i < numParticles; i++)
         {
-            Vector3 newState = SampleNewState(previousParticles[i].state, controlInput);
-            float weight = CalculateWeight(newState, measurement);
-            totalWeight += weight;
-            temporaryParticles.Add(new ParticleState(newState, weight));
+            noiseArray[i] = Random.insideUnitSphere * positionNoise;
         }
 
-        if (totalWeight <= 0f)
+        // Parallelizzazione della predizione e calcolo dei pesi
+        Parallel.For(0, numParticles, i =>
         {
-            for (int i = 0; i < numParticles; i++)
+            Vector3 newState = SampleNewState(previousParticles[i].state, controlInput, noiseArray[i]);
+            float weight = CalculateWeight(newState, measurement);
+
+            lock (temporaryParticles)  // Protezione per l'accesso alle risorse condivise
             {
-                temporaryParticles[i].weight = 1f / numParticles;
+                temporaryParticles.Add(new ParticleState(newState, weight));
             }
-        }
-        else
+        });
+
+        // Calcolo totale del peso e normalizzazione
+        for (int i = 0; i < numParticles; i++)
         {
-            // Normalizza i pesi
+            totalWeight += temporaryParticles[i].weight;
+        }
+
+        if (totalWeight > 0f)
+        {
             for (int i = 0; i < numParticles; i++)
             {
                 temporaryParticles[i].weight /= totalWeight;
             }
         }
+        else
+        {
+            // Normalizzazione dei pesi nel caso di un peso totale di zero
+            for (int i = 0; i < numParticles; i++)
+            {
+                temporaryParticles[i].weight = 1f / numParticles;
+            }
+        }
 
+        // Resampling sistematico
         currentParticles = SystematicResampling(temporaryParticles, numParticles);
+
+        // Stabilizzazione delle particelle (per evitare oscillazioni)
+        StabilizeParticles();
+
+        // Aggiorna la lista di particelle precedenti
         previousParticles = new List<ParticleState>(currentParticles);
     }
 
-    private Vector3 SampleNewState(Vector3 previousState, Vector3 controlInput)
+    private Vector3 SampleNewState(Vector3 previousState, Vector3 controlInput, Vector3 noise)
     {
-        Vector3 predictedState = Vector3.Lerp(previousState, controlInput, 0);
-        Vector3 noise = Random.insideUnitSphere * positionNoise;
+        // Predici la nuova posizione in base al controllo (ad esempio velocità e direzione)
+        Vector3 predictedState = previousState + controlInput;
+
+        // Aggiungi rumore per simulare l'incertezza
         return predictedState + noise;
     }
 
     private float CalculateWeight(Vector3 state, Vector3 measurement)
     {
         float distance = Vector3.Distance(state, measurement);
+        
+        // Ottimizzazione: se la distanza è troppo grande, assegna direttamente un peso basso
+        if (distance > 10f)
+            return 0.01f;
+
         return Mathf.Exp(-Mathf.Pow(distance, 2) / (2 * Mathf.Pow(measurementNoise, 2)));
     }
 
@@ -99,35 +130,35 @@ public class ParticleFilter : MonoBehaviour
     {
         List<ParticleState> resampledParticles = new List<ParticleState>();
         float[] cumulativeSums = new float[n];
-        
+
         // Calcola le somme cumulative
         cumulativeSums[0] = particles[0].weight;
         for (int idx = 1; idx < n; idx++)
         {
-            cumulativeSums[idx] = cumulativeSums[idx-1] + particles[idx].weight;
+            cumulativeSums[idx] = cumulativeSums[idx - 1] + particles[idx].weight;
         }
 
         // Assicurati che l'ultima somma cumulativa sia 1
-        cumulativeSums[n-1] = 1f;
+        cumulativeSums[n - 1] = 1f;
 
         // Inizializza la soglia
-        float u = Random.Range(0f, 1f/n);
+        float u = Random.Range(0f, 1f / n);
         int currentIndex = 0;
 
         // Seleziona i campioni
         for (int j = 0; j < n; j++)
         {
-            while (currentIndex < n-1 && u > cumulativeSums[currentIndex])
+            while (currentIndex < n - 1 && u > cumulativeSums[currentIndex])
             {
                 currentIndex++;
             }
 
             resampledParticles.Add(new ParticleState(
                 particles[currentIndex].state,
-                1f/n
+                1f / n
             ));
 
-            u += 1f/n;
+            u += 1f / n;
         }
 
         return resampledParticles;
@@ -136,7 +167,7 @@ public class ParticleFilter : MonoBehaviour
     public Vector3 EstimatePosition()
     {
         Vector3 estimatedPosition = Vector3.zero;
-        
+
         if (currentParticles == null || currentParticles.Count == 0)
         {
             return transform.position;
@@ -147,6 +178,17 @@ public class ParticleFilter : MonoBehaviour
             estimatedPosition += particle.state;
         }
         return estimatedPosition / currentParticles.Count;
+    }
+
+    // Metodo di stabilizzazione per evitare oscillazioni improvvise
+    private void StabilizeParticles()
+    {
+        // Stabilizza la posizione media delle particelle (ad esempio limitando il movimento troppo rapido)
+        Vector3 estimatedPosition = EstimatePosition();
+        foreach (var particle in currentParticles)
+        {
+            particle.state = Vector3.Lerp(particle.state, estimatedPosition, 0.1f);
+        }
     }
 
     // Metodo di debug per visualizzare le particelle

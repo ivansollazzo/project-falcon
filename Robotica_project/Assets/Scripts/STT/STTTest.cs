@@ -43,12 +43,12 @@ public class STTTest : MonoBehaviour
             //bring the robot to the "Checkout screens" tag object
             /*
             coordinate per il checkout
-            x = -0.3f;
-            y = -1.421226f;
-            z = 11.2f;*/
+            x = -0.48f;
+            y = 0.13f;
+            z = 9.98f;*/
 
             Debug.Log("Robot is moving to checkout");
-            robotController.SetDestination(new Vector3(-0.3f, -1.421226f, 11.2f));
+            robotController.SetDestination(new Vector3(-0.48f, 0.13f, 9.98f));
         
         }
         else if (output == "entra" || output == "voglio entrare")
@@ -57,11 +57,21 @@ public class STTTest : MonoBehaviour
 
             /*
             coordinate per il tavolo
+
+            x = 3.35f;
+            y = 0.11999999f;
+            z = 3.26f;
+
+            x = -17.63f;
+            y = 0.11999999f;
+            z = -0.37f;
+
+
             x = -9.914f;
-            y = 0.09999999f;
+            y = 0.11999999f;
             z = 1.938766f;*/
 
-            robotController.SetDestination(new Vector3(-9.914f, 0.09999999f, 1.938766f));
+            robotController.SetDestination(new Vector3(-9.914f, 0.11999999f, 1.938766f));
             Debug.Log("Robot is moving to entrance");
 
         }

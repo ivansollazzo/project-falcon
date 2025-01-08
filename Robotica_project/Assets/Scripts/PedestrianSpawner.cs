@@ -8,8 +8,6 @@ public class PedestrianSpawner : MonoBehaviour
     public GameObject pedestrianPrefab2;
 
     public GameObject pedestrianPrefab3;
-    public GameObject pedestrianPrefab4;
-    public GameObject pedestrianPrefab5;
 
 
     public int pedestriansToSpawn;
@@ -23,7 +21,7 @@ public class PedestrianSpawner : MonoBehaviour
 
     IEnumerator Spawn()
     {
-        GameObject[] prefabs = { pedestrianPrefab, pedestrianPrefab2, pedestrianPrefab3, pedestrianPrefab4, pedestrianPrefab5 };
+        GameObject[] prefabs = { pedestrianPrefab, pedestrianPrefab2, pedestrianPrefab3};
         int count = 0;
 
         while (count < pedestriansToSpawn)

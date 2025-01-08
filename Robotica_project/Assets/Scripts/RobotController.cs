@@ -9,15 +9,14 @@ public class RobotController : MonoBehaviour
     private ParticleFilter particleFilter;
 
     private GameObject disabledPerson;
-
     private Animator disabledPersonAnimator;
-
     private TTSManager ttsManager;
-
     private ObstacleSensor obstacleSensor;
-
     private bool destinationSet = false;
-    
+
+    private Vector3 previousPosition;
+    private float movementThreshold = 0.1f; // Soglia per aggiornare il filtro particellare
+
     void Start()
     {
         stateMachine = this.gameObject.AddComponent<StateMachine>();
@@ -45,8 +44,8 @@ public class RobotController : MonoBehaviour
         {
             Debug.LogError("DisabledPerson is not assigned!");
         }
-        else {
-            // Get the animator
+        else
+        {
             disabledPersonAnimator = disabledPerson.GetComponent<Animator>();
             disabledPersonAnimator.SetFloat("Speed", 0.0f);
         }
@@ -55,6 +54,8 @@ public class RobotController : MonoBehaviour
         {
             stateMachine.SetState(new StandbyState(stateMachine));
         }
+
+        previousPosition = transform.position; // Inizializza la posizione precedente
     }
 
     public void SetMoving(bool moving)
@@ -85,80 +86,83 @@ public class RobotController : MonoBehaviour
             {
                 this.disabledPersonAnimator.SetFloat("Speed", 0.0f);
             }
-            
-            Debug.Log("Ruotando verso il target: " + targetPosition);
-            
-            // Calculate the direction to the target
-            Vector3 direction = targetPosition - transform.position;
-            direction.Normalize();
 
-            // Calculate the error
-            Quaternion targetRotation = Quaternion.LookRotation(direction);
+            Vector3 estimatedPosition = particleFilter.EstimatePosition();
+            Vector3 targetDirection = targetPosition - transform.position;
+            targetDirection.Normalize();
+            Quaternion targetRotation = Quaternion.LookRotation(targetDirection);
+
+            Vector3 correctedDirection = (targetPosition - estimatedPosition).normalized;
+            Quaternion correctedRotation = Quaternion.LookRotation(correctedDirection);
+
+            float rotationSpeed = 90.0f;
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, correctedRotation, rotationSpeed * Time.deltaTime);
+
+            Vector3 controlInput = Vector3.zero;
+            Vector3 measurement = transform.position;
+            particleFilter.UpdateParticles(controlInput, measurement);
+
+            Debug.DrawLine(transform.position, estimatedPosition, Color.yellow);
+            Debug.DrawLine(estimatedPosition, targetPosition, Color.cyan);
+            Debug.DrawRay(transform.position, transform.forward * 2.0f, Color.red);
+
             float error = Quaternion.Angle(transform.rotation, targetRotation);
-
-            if (error >= 0.01f)
-            {
-                float rotationSpeed = Time.deltaTime * 360.0f;
-                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * rotationSpeed);
-                return false;
-            }
-            
-            return true;
+            return error < 1.0f;
         }
-        
+
         return false;
     }
 
-    public bool IsDestinationSet()
+    public bool MoveToTarget(Vector3 targetPosition)
     {
-        return this.destinationSet;
-    }
-
-    public bool MoveToTarget(Vector3 targetPosition) 
-    {
-        if (isMoving) 
+        if (isMoving)
         {
             if (this.disabledPersonAnimator != null)
             {
                 this.disabledPersonAnimator.SetFloat("Speed", 1.0f);
             }
 
-            // Calcola la direzione e la distanza verso il target (con l'asse z rivolto verso il target)
-            Vector3 directionToTarget = targetPosition - transform.position;
+            Vector3 estimatedPosition = particleFilter.EstimatePosition();
+            Vector3 directionToTarget = targetPosition - estimatedPosition;
             float distanceToTarget = directionToTarget.magnitude;
 
-            // Calcola il controllo di input (movimento desiderato)
-            Vector3 controlInput = transform.position + directionToTarget.normalized * Time.deltaTime;
+            // Velocità dinamica in base alla distanza
+            float speed = Mathf.Lerp(1.0f, 3.0f, distanceToTarget / 10f);
+            Vector3 desiredMovement = directionToTarget.normalized * speed * Time.deltaTime;
 
-            // Aggiorna il filtro particellare con il controllo di input e la posizione attuale
-            particleFilter.UpdateParticles(controlInput, transform.position);
+            transform.position += desiredMovement;
 
-            // Ottieni la posizione stimata dal filtro particellare
-            Vector3 estimatedPosition = particleFilter.EstimatePosition();
+            // Aggiorna il filtro particellare solo se il movimento è significativo
+            if (Vector3.Distance(transform.position, previousPosition) > movementThreshold)
+            {
+                Vector3 controlInput = desiredMovement;
+                Vector3 measurement = transform.position;
+                particleFilter.UpdateParticles(controlInput, measurement);
 
-            // Calcola la direzione corretta usando la posizione stimata
-            Vector3 correctedDirection = (targetPosition - estimatedPosition).normalized;
-            
-            // Muovi il robot
-            transform.position += correctedDirection * Time.deltaTime;
+                previousPosition = transform.position; // Aggiorna la posizione precedente
+            }
 
             Debug.DrawLine(transform.position, estimatedPosition, Color.yellow);
             Debug.DrawLine(estimatedPosition, targetPosition, Color.cyan);
 
-            // Controlla se siamo abbastanza vicini alla destinazione
-            if (distanceToTarget <= 0.25f) 
+            if (distanceToTarget <= 0.25f)
             {
                 if (this.disabledPersonAnimator != null)
                 {
                     this.disabledPersonAnimator.SetFloat("Speed", 0.0f);
                 }
-                
-                return true;
+                return true; // Raggiunto il target
             }
-            return false;
+
+            return false; // Non ancora arrivati
         }
 
         return false;
+    }
+
+    public bool IsDestinationSet()
+    {
+        return this.destinationSet;
     }
 
     public void SetDestination(Vector3 destination)
@@ -184,5 +188,4 @@ public class RobotController : MonoBehaviour
     {
         return this.stateMachine;
     }
-
 }

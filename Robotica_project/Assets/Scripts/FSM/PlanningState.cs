@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement;
 
 public class PlanningState : State
 {
@@ -15,6 +16,8 @@ public class PlanningState : State
     public List<Cell> path;
     private CameraController cameraController; // Riferimento alla CameraController
 
+    private CameraControllerFF cameraControllerFF;
+
 
     public PlanningState(StateMachine stateMachine) : base(stateMachine)
     {
@@ -25,6 +28,7 @@ public class PlanningState : State
 
         // Ottenere la CameraController dalla scena (modifica se necessario)
         this.cameraController = Camera.main.GetComponent<CameraController>();
+        this.cameraControllerFF = Camera.main.GetComponent<CameraControllerFF>();
     }
 
     public override void EnterState()
@@ -100,8 +104,16 @@ public class PlanningState : State
                 path.RemoveAt(0);
             }
 
-            // Richiamo la cam per visualizzare la destinazione
-            cameraController.UpdateDestination(destination);
+            if(SceneManager.GetActiveScene().name == "City")
+            {
+                // Richiamo la cam per visualizzare la destinazione
+                cameraController.UpdateDestination(destination);
+            }
+            else if(SceneManager.GetActiveScene().name == "FastFood")
+            {
+                // Richiamo la cam FF per visualizzare la destinazione
+                cameraControllerFF.UpdateDestination(destination);
+            }
 
             // Feedback vocale
             ttsManager.Speak("Pianificazione completata. Sto per iniziare la navigazione. Règgiti forte!");
@@ -110,11 +122,20 @@ public class PlanningState : State
             yield return new WaitForSeconds(8);
 
             // Torna alla visuale del robot
-            if (cameraController != null)
+            if(SceneManager.GetActiveScene().name == "City")
             {
-                cameraController.FollowRobot();
+                if (cameraController != null)
+                {
+                    cameraController.FollowRobot();
+                }
             }
-
+            if(SceneManager.GetActiveScene().name == "FastFood")
+            {
+                    if (cameraControllerFF != null)
+                {
+                    cameraControllerFF.FollowRobot();
+                }
+            }
             // Passa allo stato di navigazione
             stateMachine.SetState(new NavigationState(stateMachine, path));
         }
@@ -126,11 +147,20 @@ public class PlanningState : State
             Debug.Log("Percorso non trovato!");
 
             // Torna alla visuale del robot in caso di errore
-            if (cameraController != null)
+            if(SceneManager.GetActiveScene().name == "City")
             {
-                cameraController.FollowRobot();
+                if (cameraController != null)
+                {
+                    cameraController.FollowRobot();
+                }
             }
-
+            if(SceneManager.GetActiveScene().name == "FastFood")
+            {
+                    if (cameraControllerFF != null)
+                {
+                    cameraControllerFF.FollowRobot();
+                }
+            }
             stateMachine.SetState(new StandbyState(stateMachine));
         }
     }

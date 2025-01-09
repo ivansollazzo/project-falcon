@@ -59467,7 +59467,7 @@ Transform:
   m_GameObject: {fileID: 2025823426}
   serializedVersion: 2
   m_LocalRotation: {x: 0.074021436, y: 0, z: 0, w: 0.9972567}
-  m_LocalPosition: {x: 0, y: 3.37, z: -18.93}
+  m_LocalPosition: {x: 0, y: 3.022, z: -18.983}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -59485,12 +59485,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: af390730c9a4c4581b45ef95a4ce14e8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 10
-  zoomSpeed: 5
-  rotationSpeed: 100
-  sprintMultiplier: 2
-  minZoom: 5
-  maxZoom: 50
+  initialOffset: {x: 0, y: 5, z: -5}
+  initialTransitionSpeed: 2
+  destinationOffset: {x: 2.5, y: 2, z: 2.2}
+  destinationTransitionSpeed: 2
+  followOffset: {x: 0, y: 5, z: -5}
+  followTransitionSpeed: 2.5
 --- !u!1001 &2026976774
 PrefabInstance:
   m_ObjectHideFlags: 0

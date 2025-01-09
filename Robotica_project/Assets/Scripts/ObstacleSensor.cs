@@ -78,7 +78,7 @@ public class ObstacleSensor : MonoBehaviour
             Vector3 rayDirection = rayRotation * Vector3.forward;
 
             // Lancia il raggio
-            if (Physics.Raycast(coneOrigin, rayDirection, out RaycastHit hit, range, LayerMask.GetMask("Obstacle")))
+            if (Physics.Raycast(coneOrigin, rayDirection, out RaycastHit hit, range, LayerMask.GetMask("Obstacle","Pedestrians","Cars")))
             {
                 if (hit.distance < minimumDistance)
                 {

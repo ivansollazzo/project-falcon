@@ -1,0 +1,1 @@
+Scelta non valida! Riprova! Scegli "Bar","Negozio","Casa","Ufficio" o "Supermercato".

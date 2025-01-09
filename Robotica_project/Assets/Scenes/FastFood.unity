@@ -9048,12 +9048,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 321073514}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: 0.000000021855694, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 893066315}
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &321073516
 MonoBehaviour:
@@ -22418,8 +22418,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   menuReading: {fileID: 1613286537}
   ttsManager: {fileID: 2111489257}
-  foodChoosen: 0
   cloudController: {fileID: 780919716}
+  baseInkJsonFile: {fileID: 4900000, guid: 9a7a2abec61e84309bade346a1761bbb, type: 3}
+  foodChoosen: 0
 --- !u!114 &780919716
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -26214,7 +26215,6 @@ Transform:
   - {fileID: 2025823430}
   - {fileID: 705507995}
   - {fileID: 1108303038}
-  - {fileID: 321073515}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &894900442
@@ -48270,6 +48270,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3e15cecf0cc644a8b81ce1b6a3bab32f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  inkJSON: {fileID: 0}
 --- !u!114 &1613286540
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -59390,7 +59391,7 @@ GameObject:
   - component: {fileID: 2025823430}
   - component: {fileID: 2025823427}
   - component: {fileID: 2025823429}
-  - component: {fileID: 2025823428}
+  - component: {fileID: 2025823431}
   m_Layer: 0
   m_Name: Camera
   m_TagString: MainCamera
@@ -59449,24 +59450,6 @@ Camera:
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
   m_StereoSeparation: 0.022
---- !u!114 &2025823428
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2025823426}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f7d1dbedc3cda9be7a10e5b905ff9d67, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  moveSpeed: 5
-  zoomSpeed: 5
-  rotationSpeed: 50
-  sprintMultiplier: 2
-  minZoom: 5
-  maxZoom: 50
 --- !u!81 &2025823429
 AudioListener:
   m_ObjectHideFlags: 0
@@ -59490,6 +59473,24 @@ Transform:
   m_Children: []
   m_Father: {fileID: 893066315}
   m_LocalEulerAnglesHint: {x: 8.49, y: 0, z: 0}
+--- !u!114 &2025823431
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2025823426}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: af390730c9a4c4581b45ef95a4ce14e8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  moveSpeed: 10
+  zoomSpeed: 5
+  rotationSpeed: 100
+  sprintMultiplier: 2
+  minZoom: 5
+  maxZoom: 50
 --- !u!1001 &2026976774
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -62552,3 +62553,4 @@ SceneRoots:
   - {fileID: 1028523595}
   - {fileID: 1066257995}
   - {fileID: 2018104208}
+  - {fileID: 321073515}

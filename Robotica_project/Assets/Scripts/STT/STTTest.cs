@@ -5,18 +5,18 @@ using System.IO.Compression;
 
 public class STTTest : MonoBehaviour
 {
-    private TextAsset inkJSON;
+    [SerializeField]
+    private TextAsset inkJSON; 
     private GameObject robot;
     private RobotController robotController;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
-    async void Start()
+    void Start()
     {
         // Get robot game object name
         GameObject robot = GameObject.Find("Robot");
         STTManager sttManager = robot.GetComponent<STTManager>();
         robotController = robot.GetComponent<RobotController>();
-        inkJSON = Resources.Load<TextAsset>("InkFiles/NonHoCapito");
     }
 
     public async void Speaking() // Cambiato a public
@@ -28,7 +28,6 @@ public class STTTest : MonoBehaviour
         GameObject robot = GameObject.Find("Robot");
         robotController = robot.GetComponent<RobotController>();
         STTManager sttManager = robot.GetComponent<STTManager>();
-        inkJSON = Resources.Load<TextAsset>("InkFiles/NonHoCapito");
 
         // Start the speech-to-text engine and get the output asynchronously
         string output = await sttManager.Speak();
@@ -49,6 +48,8 @@ public class STTTest : MonoBehaviour
 
             Debug.Log("Robot is moving to checkout");
             robotController.SetDestination(new Vector3(-0.48f, 0.13f, 9.98f));
+            DialogueManager.GetInstance().ExitDialogueMode();
+
         
         }
         else if (output == "entra" || output == "voglio entrare")
@@ -71,7 +72,8 @@ public class STTTest : MonoBehaviour
             y = 0.11999999f;
             z = 1.938766f;*/
 
-            robotController.SetDestination(new Vector3(-9.914f, 0.11999999f, 1.938766f));
+            robotController.SetDestination(new Vector3(-9.914f, 0.199999f, 1.938766f));
+            DialogueManager.GetInstance().ExitDialogueMode();
             Debug.Log("Robot is moving to entrance");
 
         }

@@ -128,7 +128,7 @@ public class RobotController : MonoBehaviour
 
             // Velocità dinamica in base alla distanza
             float speed = Mathf.Lerp(1.0f, 3.0f, distanceToTarget / 10f);
-            Vector3 desiredMovement = directionToTarget.normalized * speed * Time.deltaTime;
+            Vector3 desiredMovement = directionToTarget.normalized * speed/2 * Time.deltaTime;
 
             transform.position += desiredMovement;
 

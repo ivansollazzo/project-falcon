@@ -38,7 +38,7 @@ public class FoodAvailability : MonoBehaviour
         while (true)
         {
             Debug.Log("Attesa di 3 minuti prima del prossimo aggiornamento...");
-            yield return new WaitForSeconds(180f);
+            yield return new WaitForSeconds(10f);
 
             Debug.Log("Avvio dell'aggiornamento della disponibilità dei cibi...");
 

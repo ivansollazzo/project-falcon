@@ -35,7 +35,7 @@ public class WaitingState : State {
 
         if (elapsedTime >= waitingTime) {
             
-            ttsManager.Speak("Tempo di attesa scaduto. Ripianifico il percorso.");
+            ttsManager.Speak("Ostacolo fisso. Provvedo a raggirarlo per riprendere la navigazione.");
 
             // We calculate the min and max cells occupied by the obstacle
             float obstacleMinX = detectedObstacle.bounds.min.x;
@@ -115,11 +115,13 @@ public class WaitingState : State {
             // Disable the sensors
             obstacleSensor.EnableSensor(false);
 
+            // Explained in the PlanningState
+
             stateMachine.SetState(new PlanningState(stateMachine));
         }
 
         if (detectedObstacle == null) {
-            ttsManager.Speak("Ostacolo rimosso. Riprendo la navigazione...");
+            ttsManager.Speak("Ostacolo spostato. Riprendo la navigazione.");
             robotController.SetMoving(true);
             stateMachine.SetState(currentNavigationState);
         }

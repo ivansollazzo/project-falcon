@@ -23,7 +23,7 @@ public class MenuReading : MonoBehaviour
 
     public bool menuReaded = false;
     public bool firstRetrieve = false;
-    public Dictionary<string, string> menuItems = new Dictionary<string, string>();
+    public Dictionary<string, List<string>> menuItems = new Dictionary<string, List<string>>();
 
     private IDriver driver;
 
@@ -50,11 +50,15 @@ public class MenuReading : MonoBehaviour
         }
     }
 
-    private async Task<Dictionary<string, string>> RetrieveMenu()
+    private async Task<Dictionary<string, List<string>>> RetrieveMenu()
     {
-        Debug.Log("Recupero dei cibi dal database...");
+        Debug.Log("Recupero dei cibi con priorità dal database...");
 
-        Dictionary<string, string> menuItems = new Dictionary<string, string>();
+        Dictionary<string, List<string>> menuItems = new Dictionary<string, List<string>>
+        {
+            { "Prioritario", new List<string>() },
+            { "Normale", new List<string>() }
+        };
 
         try
         {
@@ -62,25 +66,40 @@ public class MenuReading : MonoBehaviour
             {
                 var result = await session.ExecuteReadAsync(async tx =>
                 {
-                    //gli elementi solo disponibili facciamo il retrieving
-                    var queryResult = await tx.RunAsync("MATCH (item:MENU_ITEM) WHERE item.available = true RETURN item.name AS name, item.available AS available, item.type AS type");
+                    // Query per recuperare solo i cibi disponibili
+                    var queryResult = await tx.RunAsync(@"
+                        // Recupera i cibi prioritari
+                        MATCH (robot:ROBOT {name: 'Assistente Ordini'})-[:PROPONE_PRIORITARIO]->(item:MENU_ITEM)
+                        WHERE item.available = true
+                        RETURN item.name AS name, item.type AS type, 'Prioritario' AS priority
+                        UNION
+                        // Recupera i cibi normali escludendo quelli prioritari
+                        MATCH (robot:ROBOT {name: 'Assistente Ordini'})-[:PROPONE]->(item:MENU_ITEM)
+                        WHERE item.available = true
+                        AND NOT (robot)-[:PROPONE_PRIORITARIO]->(item)
+                        RETURN item.name AS name, item.type AS type, 'Normale' AS priority
+                    ");
                     return await queryResult.ToListAsync();
                 });
 
-                Debug.Log($"Trovati {result.Count} cibi nel database.");
+                Debug.Log($"Trovati {result.Count} cibi disponibili nel database con priorità.");
 
                 foreach (var record in result)
                 {
                     string name = record["name"].As<string>();
-                    bool isAvailable = record["available"].As<bool>();
                     string type = record["type"].As<string>();
+                    string priority = record["priority"].As<string>();
 
-                    if (isAvailable) // Solo cibi disponibili
+                    if (priority == "Prioritario")
                     {
-                        menuItems[name] = type;
+                        menuItems["Prioritario"].Add($"{name}");
+                    }
+                    else if (priority == "Normale")
+                    {
+                        menuItems["Normale"].Add($"{name}");
                     }
 
-                    Debug.Log($"Cibo recuperato: {name}, Tipo: {type}, Disponibile: {isAvailable}");
+                    Debug.Log($"Cibo recuperato: {name},  Priorità: {priority}");
                 }
             }
         }
@@ -91,6 +110,9 @@ public class MenuReading : MonoBehaviour
 
         return menuItems;
     }
+
+
+
 
 
     void Update()
@@ -116,29 +138,40 @@ public class MenuReading : MonoBehaviour
         if (retrieveTask.Exception == null)
         {
             menuItems = retrieveTask.Result;
+            string menuText = "";
+            string menuText1 = "";
 
-            // Creazione del testo del menu
-            string menuText = "CIAO AMICO, il menu aggiornato con solo i cibi disponibili è il seguente: ";
-            List<string> menuTextItems = new List<string>();
-
-            foreach (var item in menuItems)
+            if (menuItems["Prioritario"].Count > 0) // Controlla se ci sono cibi prioritari
             {
-                // Aggiungi ciascun cibo separato da una virgola e uno spazio
-                menuTextItems.Add(item.Key);
+                Debug.Log("CIBI PRIOTIARI TROVATI VAI TTS PARLA");
+                menuText = "....................In base alle tue preferenze , nel menu aggiornato ci sono: ";
+                menuText += string.Join(", ", menuItems["Prioritario"]) + "...........";
+
+                if (ttsManager != null)
+                {
+                    ttsManager.Speak(menuText, robotic_voice: false);
+                }
             }
 
-            // Concatena tutti gli elementi separati da ", " e aggiungi un punto alla fine
-            menuText += string.Join(", ", menuTextItems) + ".";
+            if (menuItems["Normale"].Count > 0) // Solo cibi con priorità normale
+            {
+                Debug.Log("CIBI NORMALE TROVATI VAI TTS PARLA");
+                menuText1 = "...........In base alle tue intolleranze, nel menu aggiornato ci sono questi cibi, anche se non sono i tuoi preferiti: ";
+                menuText1 += string.Join(", ", menuItems["Normale"]) + ".";
+            }
+            else
+            {
+                menuText1 = "Spiacente, al momento non ci sono cibi disponibili per te.";
+            }
 
             if (ttsManager != null)
             {
-                ttsManager.Speak(menuText, robotic_voice: false);
+                ttsManager.Speak(menuText1, robotic_voice: false);
             }
             else
             {
                 Debug.LogError("TextToSpeech non è collegato!");
             }
-
         }
         else
         {
@@ -149,6 +182,7 @@ public class MenuReading : MonoBehaviour
         lastMenuUpdateTime = Time.time; // Aggiorna il tempo dell'ultimo recupero
         menuReaded = true;
     }
+
 
     private bool CheckForCheckoutScreens()
     {

@@ -13,6 +13,8 @@ public class PlanningState : State
     private Cell[,] grid;
 
     public List<Cell> path;
+    private CameraController cameraController; // Riferimento alla CameraController
+
 
     public PlanningState(StateMachine stateMachine) : base(stateMachine)
     {
@@ -20,6 +22,9 @@ public class PlanningState : State
         this.destination = robotController.GetDestination();
         this.grid = GridManager.Instance.GetGrid();
         this.ttsManager = robotController.GetTTSManager();
+
+        // Ottenere la CameraController dalla scena (modifica se necessario)
+        this.cameraController = Camera.main.GetComponent<CameraController>();
     }
 
     public override void EnterState()
@@ -39,7 +44,16 @@ public class PlanningState : State
         stateMachine.StartCoroutine(ExecutePlanning());
     }
 
-    // Converting ExecuteState to IEnumerator (Coroutine)
+    // Coroutine che aggiunge un delay prima di iniziare la pianificazione
+    private IEnumerator WaitForPlanning()
+    {
+        // Aspetta un po' prima di iniziare la pianificazione, ad esempio 3 secondi
+        yield return new WaitForSeconds(3); 
+
+        // Dopo il delay, inizia la pianificazione del percorso
+        stateMachine.StartCoroutine(ExecutePlanning());
+    }
+
     public override void ExecuteState()
     {
         // Managed by coroutine
@@ -47,14 +61,13 @@ public class PlanningState : State
 
     private IEnumerator ExecutePlanning()
     {
-        // Ottengo la posizione corrente del robot
+        // Otteniamo la posizione corrente del robot
         Vector3 robotPosition = stateMachine.gameObject.transform.position;
 
-        // Ottengo la cella di partenza corrispondente del robot. Itero tutte le celle per ottenere la posizione corrispondente con riferimento alla distanza più vicina.
+        // Otteniamo la cella di partenza del robot
         Cell startCell = GridManager.Instance.GetCellFromWorldPosition(robotPosition);
         Cell endCell = GridManager.Instance.GetCellFromWorldPosition(destination);
 
-        // Stampiamo tutto
         Debug.Log("Cella di partenza: " + startCell);
         Debug.Log("Cella di destinazione: " + endCell);
 
@@ -81,16 +94,26 @@ public class PlanningState : State
             PathDrawer pathDrawer = stateMachine.gameObject.AddComponent<PathDrawer>();
             pathDrawer.DrawPath(path);
 
-            /* Verifichiamo quanto il primo elemento del percorso sia vicino al robot. Nel caso sia troppo vicino, lo rimuoviamo. */
+            /* Verifica se il primo elemento del percorso è vicino al robot, se sì lo rimuove */
             if (Vector3.Distance(robotPosition, path[0].GetWorldPosition()) < 1.0f)
             {
                 path.RemoveAt(0);
             }
 
+            // Richiamo la cam per visualizzare la destinazione
+            cameraController.UpdateDestination(destination);
+
             // Feedback vocale
             ttsManager.Speak("Pianificazione completata. Sto per iniziare la navigazione. Règgiti forte!");
 
-            yield return new WaitForSeconds(5);
+
+            yield return new WaitForSeconds(8);
+
+            // Torna alla visuale del robot
+            if (cameraController != null)
+            {
+                cameraController.FollowRobot();
+            }
 
             // Passa allo stato di navigazione
             stateMachine.SetState(new NavigationState(stateMachine, path));
@@ -99,10 +122,15 @@ public class PlanningState : State
         {
             // Feedback vocale
             ttsManager.Speak("Percorso non trovato. Mi dispiace. Riprova per favore.");
-
             yield return new WaitForSeconds(2);
-            
             Debug.Log("Percorso non trovato!");
+
+            // Torna alla visuale del robot in caso di errore
+            if (cameraController != null)
+            {
+                cameraController.FollowRobot();
+            }
+
             stateMachine.SetState(new StandbyState(stateMachine));
         }
     }

@@ -16,7 +16,7 @@ public class ArrivalState : State
         TTSManager ttsManager = robotController.GetTTSManager();
 
         // Speak the arrival message
-        ttsManager.Speak("Sei arrivato a destinazione!");
+        ttsManager.Speak("Sei arrivato a destinazione.");
 
         Debug.Log("Arrivato! Pronto per la prossima Destinazione");
         robotController.ClearDestination();

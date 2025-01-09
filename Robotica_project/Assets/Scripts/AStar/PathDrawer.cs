@@ -6,7 +6,7 @@ public class PathDrawer : MonoBehaviour
 {
     public List<Cell> path;
     public float drawSpeed = 20.0f;
-    public float lineWidth = 0.1f;
+    public float lineWidth = 0.5f;
     public float heightOffset = 0.25f;
     public float fadeOutDuration = 1.0f; // Durata della dissolvenza
     public float fadeOutDelay = 5.0f;    // Ritardo prima della dissolvenza

@@ -1,79 +1,125 @@
+using System.Collections;
 using UnityEngine;
 
 public class CameraController : MonoBehaviour
 {
-    public float moveSpeed = 10f; // Camera movement speed
-    public float zoomSpeed = 5f; // Camera zoom speed
-    public float rotationSpeed = 100f; // Camera rotation speed
-    public float sprintMultiplier = 2f; // Speed multiplier when sprinting
+    public Transform robot;                // Il robot da seguire
+    public Vector3 initialOffsetPosition;  // Offset iniziale della posizione
+    public Vector3 initialOffsetRotation;  // Rotazione iniziale relativa (Euler angles)
+    public float followDistance = 1.5f;      // Distanza desiderata dietro il robot
+    public float heightOffset = 1.5f;        // Offset verticale per la telecamera
+    public float transitionSpeed = 2f;     // Velocità di transizione
 
-    public float minZoom = 5f; // Minimum zoom distance
-    public float maxZoom = 50f; // Maximum zoom distance
+    private Transform destination;         // Destinazione dinamica
+    private Vector3 initialRobotPosition;  // Posizione iniziale del robot
+    private enum CameraState { StaticPosition, FollowRobot, LookAtDestination }
+    private CameraState currentState = CameraState.StaticPosition; // Stato iniziale
+    private bool returningToRobot = false; // Flag per determinare se la telecamera sta tornando al robot
 
-    private Transform cameraTransform; // To keep rotation separate
+    private float waitTime = 8.0f; // Tempo di attesa in secondi
+    private bool isWaiting = false;
 
     void Start()
     {
-        cameraTransform = Camera.main.transform; // Assign the main camera's transform
+        // Imposta la posizione iniziale della telecamera (statica)
+        transform.position = robot.position + initialOffsetPosition;
 
-        // Check if operating system is Mac OS X
-        if (SystemInfo.operatingSystemFamily == OperatingSystemFamily.MacOSX) {
-            rotationSpeed *= 30f;
-        }
+        // Imposta la rotazione iniziale della telecamera
+        transform.rotation = Quaternion.Euler(initialOffsetRotation);
+
+        // La telecamera guarda sempre il robot inizialmente
+        transform.LookAt(robot);
+
+        // Memorizza la posizione iniziale del robot
+        initialRobotPosition = robot.position;
     }
 
-    void Update()
+    private IEnumerator WaitAndReturnToRobot()
     {
-        HandleMovement();
-        HandleZoom();
-        HandleMouseForRotation();
+        isWaiting = true;
+        yield return new WaitForSeconds(waitTime);
+        returningToRobot = false;
+        currentState = CameraState.FollowRobot;
+        isWaiting = false;
     }
-
-    void HandleMovement()
+    void LateUpdate()
     {
-        float horizontal = Input.GetAxis("Horizontal"); // Input from A/D or left/right arrow keys
-        float vertical = Input.GetAxis("Vertical"); // Input from W/S or up/down arrow keys
-        float speedModifier = Input.GetKey(KeyCode.LeftShift) ? sprintMultiplier : 1f; // Adjust speed when sprinting
-
-        Vector3 direction = cameraTransform.right * horizontal + cameraTransform.forward * vertical;
-        transform.position += direction * moveSpeed * speedModifier * Time.deltaTime;
-    }
-
-    void HandleZoom()
-    {
-        float scroll = Input.GetAxis("Mouse ScrollWheel"); // Input from mouse scroll wheel
-        Vector3 zoomDirection = cameraTransform.forward * scroll * zoomSpeed;
-
-        float distance = Vector3.Distance(transform.position + zoomDirection, Vector3.zero);
-        if (distance > minZoom && distance < maxZoom)
+        // Verifica se il robot si è spostato dalla sua posizione iniziale
+        if (currentState == CameraState.StaticPosition && Vector3.Distance(robot.position, initialRobotPosition) > 0.1f)
         {
-            transform.position += zoomDirection;
+            // Se il robot si è spostato, cambia lo stato della telecamera per iniziare a seguirlo
+            currentState = CameraState.FollowRobot;
+        }
+
+        switch (currentState)
+        {
+            case CameraState.StaticPosition:
+                // Mantieni la telecamera nella posizione iniziale senza movimento
+                break;
+
+            case CameraState.FollowRobot:
+                // Calcola la posizione dietro al robot, tenendo conto della rotazione del robot
+                Vector3 behindPosition = robot.position - robot.forward * followDistance;
+                behindPosition.y += heightOffset;  // Aggiungi l'offset verticale
+
+                // Transizione della posizione della telecamera
+                transform.position = Vector3.Lerp(transform.position, behindPosition, Time.deltaTime * transitionSpeed);
+
+                // La telecamera guarda sempre il robot
+                transform.LookAt(robot);
+                break;
+
+            case CameraState.LookAtDestination:
+                if (destination != null)
+                {
+                    // Calcola la posizione tutta la mappa dalla partenza alla destinazione
+                    Vector3 targetPosition = destination.position + initialOffsetPosition;
+                    targetPosition.y += 60;  // Aggiungi l'offset verticale
+                    transform.position = Vector3.Lerp(transform.position, targetPosition, Time.deltaTime * transitionSpeed);
+                    // La telecamera guarda la destinazione e sta ferma per un po'
+                    transform.LookAt(destination);
+
+                    // Verifica se la telecamera è abbastanza vicina alla destinazione per tornare al robot
+                    if (returningToRobot && Vector3.Distance(transform.position, targetPosition) < 0.5f && !isWaiting)
+                    {
+                        StartCoroutine(WaitAndReturnToRobot());
+                    }
+                }
+                break;
         }
     }
 
-    void HandleRotation()
+    public void UpdateDestination(Transform newDestination)
     {
-        float mouseX = Input.GetAxis("Mouse X");
-        float mouseY = Input.GetAxis("Mouse Y");
-
-        // Horizontal rotation
-        transform.Rotate(Vector3.up, mouseX * rotationSpeed * Time.deltaTime, Space.World);
-
-        // Vertical rotation
-        cameraTransform.Rotate(Vector3.right, -mouseY * rotationSpeed * Time.deltaTime, Space.Self);
+        // Aggiorna la destinazione con un oggetto di tipo Transform
+        destination = newDestination;
+        currentState = CameraState.LookAtDestination;
+        returningToRobot = true;
     }
 
-    void HandleMouseForRotation() {
-        // If right mouse button is pressed (on all operating systems)
-        if (Input.GetMouseButton(1))
+    public void UpdateDestination(Vector3 destinationPosition)
+    {
+        // Crea un oggetto temporaneo per rappresentare la destinazione
+        if (destination == null)
         {
-            HandleRotation();
+            GameObject tempDestination = new GameObject("TempDestination");
+            destination = tempDestination.transform;
         }
 
-        // If option key and the left mouse button are pressed (on Mac OS X)
-        if (SystemInfo.operatingSystemFamily == OperatingSystemFamily.MacOSX && Input.GetKey(KeyCode.LeftAlt) && Input.GetMouseButton(0))
-        {
-            HandleRotation();
-        }
+        destination.position = destinationPosition;
+        currentState = CameraState.LookAtDestination;
+        returningToRobot = true;
+    }
+
+    public void FollowRobot()
+    {
+        // Torna a seguire il robot
+        currentState = CameraState.FollowRobot;
+    }
+
+    public void StartFollowingRobot()
+    {
+        // Cambia stato per iniziare a seguire il robot
+        currentState = CameraState.FollowRobot;
     }
 }

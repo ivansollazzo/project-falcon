@@ -1,3 +1,4 @@
+using System.Xml.Serialization;
 using UnityEngine;
 
 public class ObstacleSensor : MonoBehaviour
@@ -32,6 +33,13 @@ public class ObstacleSensor : MonoBehaviour
     private Collider detectedObstacle;
     private bool sensorsEnabled = false;
 
+    private TTSManager ttsManager;
+
+    void Start()
+    {
+        // Ottieni il riferimento al componente TTSManager
+        ttsManager = TTSManager.Instance;
+    }
     void Update()
     {
         // Gestione dei tre coni
@@ -78,16 +86,62 @@ public class ObstacleSensor : MonoBehaviour
             Vector3 rayDirection = rayRotation * Vector3.forward;
 
             // Lancia il raggio
-            if (Physics.Raycast(coneOrigin, rayDirection, out RaycastHit hit, range, LayerMask.GetMask("Obstacle","Pedestrians","Cars")))
+            if (Physics.Raycast(coneOrigin, rayDirection, out RaycastHit hit, range, LayerMask.GetMask("Obstacle", "Pedestrians", "Cars")))
             {
+
+
+                // Se il raggio colpisce un ostacolo, controlla la distanza
                 if (hit.distance < minimumDistance)
                 {
                     // Rilevato un ostacolo, salva il collider e interrompi il ciclo
                     if (!foundObstacle)
                     {
+                        //Prendo il nome del tag
+                        string tagName = hit.collider.gameObject.GetComponent<ObjectName>().objectName;
+
+                        //facciamo degli if e in base al nome del tag facciamo dire al tts il nome del tag
+                        if (tagName == "Remy")
+                        {
+                            ttsManager.Speak("Ho trovato un ragazzo che cammina");
+                        }
+                        else if(tagName == "James")
+                        {
+                            ttsManager.Speak("Ho trovato un pedone che corre");
+                        }
+                        else if(tagName == "Bench")
+                        {
+                            ttsManager.Speak("Siamo davanti a una panchina");
+                        }
+                        else if(tagName == "Kate")
+                        {
+                            ttsManager.Speak("Ho trovato un pedone che cammina");
+                        }
+                        else if (tagName == "TrashCan")
+                        {
+                            ttsManager.Speak("Siamo vicino ad un cestino della spazzatura");
+                        }
+                        else if (tagName == "Cars")
+                        {
+                            ttsManager.Speak("Fermo sta passando un auto");
+                        }
+                        else if(tagName == "Semaforo")
+                        {
+                            ttsManager.Speak("Siamo davanti ad un Semaforo lo devo aggirare");
+                        }
+                        else if(tagName == "PaloLuce")
+                        {
+                            ttsManager.Speak("Ho trovato un Palo della luce sul nostro percorso");
+                        }
+                        else
+                        {
+                            ttsManager.Speak("Ostacolo");
+                        }
+
                         Debug.Log($"Ostacolo rilevato a: {hit.point}");
                         this.detectedObstacle = hit.collider;
                         foundObstacle = true; // Imposta il flag per impedire la ricerca di altri ostacoli
+
+
                     }
                 }
             }

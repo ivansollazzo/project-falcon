@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using UnityEngine.EventSystems;
 using System.Collections;
 using UnityEngine.UI;
+using System;
 
 public class DialogueManager : MonoBehaviour
 {
@@ -19,6 +20,8 @@ public class DialogueManager : MonoBehaviour
 
     private Story currentStory;
 
+    public string source;
+
     public bool isDialogueActive;
     private Button currentChoiceButton;
 
@@ -30,6 +33,10 @@ public class DialogueManager : MonoBehaviour
             Debug.LogWarning("Esiste già un'istanza di DialogueManager!");
         }
         instance = this;
+    }
+
+    public void setSource(string origin){
+        source = origin;
     }
 
     public static DialogueManager GetInstance()
@@ -61,7 +68,7 @@ public class DialogueManager : MonoBehaviour
         // Gestisce il click destro del mouse
         if (Input.GetMouseButtonDown(1))
         {
-            SelectHighlightedChoice();
+            SelectHighlightedChoice(source);
         }
     }
 
@@ -127,7 +134,8 @@ public class DialogueManager : MonoBehaviour
         currentChoiceButton.onClick.RemoveAllListeners();
         currentChoiceButton.onClick.AddListener(() =>
         {
-            onClickScript.OnButtonClick();
+            Debug.Log("dialogye manager SOURCEEEEE :"+source);
+            onClickScript.OnButtonClick(source);
         });
     }
     else
@@ -154,7 +162,7 @@ public class DialogueManager : MonoBehaviour
         currentStory.ChooseChoiceIndex(choiceIndex);
     }
 
-    private void SelectHighlightedChoice()
+    private void SelectHighlightedChoice(String source)
 {
     if (currentStory.currentChoices.Count > 0)
     {

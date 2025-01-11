@@ -2,6 +2,9 @@ using UnityEngine;
 using System.Threading.Tasks;
 using Unity.Collections;
 using System.IO.Compression;
+using System.Collections.Generic;
+using System;
+using System.Linq;
 
 public class STTTest : MonoBehaviour
 {
@@ -9,6 +12,10 @@ public class STTTest : MonoBehaviour
     private TextAsset inkJSON; 
     private GameObject robot;
     private RobotController robotController;
+
+    [SerializeField] private GameObject disabledPerson; // Riferimento al GameObject della persona disabile
+
+    public Dictionary<string, List<(string Name, int Calories)>> menuItems = new Dictionary<string, List<(string Name, int Calories)>>();
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -37,7 +44,19 @@ public class STTTest : MonoBehaviour
 
         Debug.Log("Output: " + output);
 
-        if (output == "ordina" || output == "voglio ordinare")
+        if (output == "ordina" || output == "voglio ordinare" || output == "ordino")
+        {
+            //bring the robot to the "Ordering screens" tag object
+            /*
+            coordinate per il tavolo
+
+            x = 3.35f;
+            y = 0.11999999f;
+            z = 3.26f;
+
+            x = -17.63f;
+            y = 0.11999999f;
+            z = -0.37f;
         {
             //bring the robot to the "Checkout screens" tag object
             /*
@@ -79,11 +98,91 @@ public class STTTest : MonoBehaviour
         }
         else
         {
-            DialogueManager.GetInstance().EnterDialogueMode(inkJSON);
+            DialogueManager dialogueManager = DialogueManager.GetInstance();
+            dialogueManager.setSource("inside");
+            dialogueManager.EnterDialogueMode(inkJSON);
             Debug.Log("I cannot understand what you said");
         }
 
         
 
+    }
+
+
+    public async void Ordering() // Cambiato a public
+    {
+        // Get robot game object name
+        Debug.Log("Speaking from button click GUI");
+
+         
+        GameObject robot = GameObject.Find("Robot");
+        robotController = robot.GetComponent<RobotController>();
+        STTManager sttManager = robot.GetComponent<STTManager>();
+        TTSManager ttsManager = TTSManager.Instance;
+
+        // Start the speech-to-text engine and get the output asynchronously
+        string output = await sttManager.Speak();
+
+        // Transform output to lower case, trim whitespace, split it into a list, and clean up each word
+        List<string> outputList = output
+        .Trim() // Remove leading and trailing whitespace
+        .ToLower() // Convert to lowercase
+        .Split(new[] { ' ', ',', ';' }, StringSplitOptions.RemoveEmptyEntries) // Split by spaces, commas, or semicolons
+        .Select(word => word.Trim()) // Trim each word individually
+        .ToList(); // Convert to a list
+
+        Debug.Log("Output: " + output);
+        
+        // Get dhe BMF of the disabled person
+        BlindedPerson blindedPerson = disabledPerson.GetComponent<BlindedPerson>();
+        int bmr = blindedPerson.GetBMR();
+
+        // Check if the output contains any of the menu items   
+        string dialogue = "....................Dopo aver riflettuto ho scelto di prendere dal menu: ";
+        // Somma delle calorie
+        int totalCalories = 0;
+
+        foreach (var item in menuItems["Prioritario"])
+        {
+            if (outputList.Contains(item.Name.ToLower()))
+            {
+                dialogue += item.Name + ", ";
+                totalCalories += item.Calories;
+            }
+        }
+        // Se non sono stati trovati cibi prioritari, controlla i normali
+        if (totalCalories < bmr)
+        {
+            foreach (var item in menuItems["Normale"])
+            {
+                if (outputList.Contains(item.Name.ToLower()))
+                {
+                    dialogue += item.Name + ", ";
+                    totalCalories += item.Calories;
+                }
+            }
+        }
+
+         if (totalCalories > bmr)
+        {
+            ttsManager.Speak("Mi dispiace, ma hai superato il tuo fabbisogno calorico giornaliero. Ti consiglio di scegliere qualcos'altro.");
+        }
+        else
+        {
+            if (dialogue.EndsWith(", "))
+        {
+            dialogue = dialogue.TrimEnd(',', ' ') + ".";
+            ttsManager.Speak(dialogue);
+
+            //lo portaq al tavolo
+            robotController.SetDestination(new Vector3(-9.914f, 0.199999f, 1.938766f));
+        }
+        }
+
+    }
+
+    public void setMenuItems(Dictionary<string, List<(string, int)>> menuItemsSource)
+    {
+        menuItems = menuItemsSource;
     }
 }

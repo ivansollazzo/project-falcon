@@ -3,83 +3,93 @@ using System.Collections.Generic;
 
 public class TTSManager : MonoBehaviour
 {
-    // We store a queue of voice objects
     private Queue<VoiceObject> voiceQueue = new Queue<VoiceObject>();
-
-    // We store the current process
+    private Dictionary<string, float> spokenTextsTimestamps = new Dictionary<string, float>(); // Traccia i timestamp
     private System.Diagnostics.Process currentProcess;
 
-    // Method to add a voice object to the queue
-    public void Speak(string text, bool robotic_voice = false)
+    public static TTSManager Instance;
+
+    // Intervallo di tempo minimo tra due ripetizioni dello stesso testo (in secondi)
+    public float repeatCooldown = 20f;
+
+    private void Awake()
     {
-        // Add the voice object to the queue
-        this.voiceQueue.Enqueue(new VoiceObject(text, robotic_voice));
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
     }
 
-    // Method to process the queue
-    public void ProcessQueue() {
+    public void Speak(string text, bool robotic_voice = false)
+    {
+        float currentTime = Time.time;
 
-        // Check if there's a current process running
-        if (this.currentProcess != null)
+        // Controlla se il testo è già stato detto di recente
+        if (spokenTextsTimestamps.TryGetValue(text, out float lastSpokenTime))
         {
-            // Check if the process has exited
-            if (this.currentProcess.HasExited)
+            if (currentTime - lastSpokenTime < repeatCooldown)
             {
-                // Debug voice
-                Debug.Log("Process ID: " + this.currentProcess.Id + " has exited");
-                this.currentProcess = null;
-            }
-            else
-            {
-                // Return to avoid starting a new process
+                Debug.Log($"Text '{text}' was spoken recently. Skipping...");
                 return;
             }
         }
 
-        // Check if the queue is not empty
-        if (this.voiceQueue.Count > 0)
+        // Aggiungi il testo alla coda e aggiorna il timestamp
+        Debug.Log($"Adding new voice object to queue: {text}");
+        voiceQueue.Enqueue(new VoiceObject(text, robotic_voice));
+        spokenTextsTimestamps[text] = currentTime;
+    }
+
+    void Update()
+    {
+        ProcessQueue();
+    }
+
+    public void ProcessQueue()
+    {
+        try
         {
-            // Get the first voice object from the queue
-            VoiceObject voiceObject = this.voiceQueue.Dequeue();
-            
-                // Check if operating system is Mac OS X
+            if (currentProcess != null && !currentProcess.HasExited)
+                return;
+
+            if (voiceQueue.Count > 0)
+            {
+                VoiceObject voiceObject = voiceQueue.Dequeue();
+
                 if (SystemInfo.operatingSystemFamily == OperatingSystemFamily.MacOSX)
                 {
-                    if (voiceObject.GetRoboticVoice())
-                    {
-                        this.currentProcess = System.Diagnostics.Process.Start("say", "-v Cellos " + voiceObject.GetText());
-                    }
-                    else {
-                        this.currentProcess = System.Diagnostics.Process.Start("say", voiceObject.GetText());
-                    }
-                    
-                    // Debug voice
-                    if (this.currentProcess != null) {
-                        Debug.Log("Process ID: " + this.currentProcess.Id + " has been started");
-                    }
-                    else {
-                        Debug.Log("Could not start voice process.");
-                    }
+                    string command = voiceObject.GetRoboticVoice()
+                        ? $"-v Cellos {EscapeText(voiceObject.GetText())}"
+                        : EscapeText(voiceObject.GetText());
+
+                    currentProcess = System.Diagnostics.Process.Start("say", command);
+                    Debug.Log($"Started process with ID: {currentProcess?.Id}");
+                }
             }
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"Error in ProcessQueue: {ex.Message}");
+            currentProcess = null;
         }
     }
 
-    // Update is called once per frame
-    void Update()
+    private string EscapeText(string text)
     {
-        // Process the queue
-        this.ProcessQueue();
+        return "\"" + text.Replace("\"", "\\\"") + "\"";
     }
 
-    // Called when the MonoBehaviour will be destroyed
     void OnDestroy()
     {
-        // Check if process is not null
-        if (this.currentProcess != null)
+        if (currentProcess != null && !currentProcess.HasExited)
         {
-            // Kill the process
-            this.currentProcess.Kill();
-            Debug.Log("Current process ID: " + this.currentProcess.Id + " has been killed");
+            currentProcess.Kill();
+            Debug.Log($"Current process ID: {currentProcess.Id} has been killed");
         }
     }
 }

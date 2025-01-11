@@ -21,7 +21,7 @@ public class RobotController : MonoBehaviour
     {
         stateMachine = this.gameObject.AddComponent<StateMachine>();
         particleFilter = this.gameObject.GetComponent<ParticleFilter>();
-        ttsManager = this.gameObject.GetComponent<TTSManager>();
+        ttsManager = TTSManager.Instance;
         disabledPerson = GameObject.Find("DisabledPerson");
         obstacleSensor = this.gameObject.GetComponent<ObstacleSensor>();
 

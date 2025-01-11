@@ -12,6 +12,8 @@ public class FoodChooser : MonoBehaviour
     public ThinkingCloudController cloudController; // Riferimento al controller della nuvoletta
     public TextAsset baseInkJsonFile; // Collegare il file .inkjson dall'Inspector
 
+    public GameObject sttTestObject; // Riferimento al GameObject con lo script STTTest
+
     public bool foodChoosen = false;
     private bool isThinking = false;
     private float thinkingTime = 30f; // Tempo di attesa per il "pensiero"
@@ -19,16 +21,19 @@ public class FoodChooser : MonoBehaviour
 
     private List<string> responses = new List<string>
     {
-        "Mmmmmm.. un attimo che penso a cosa prendere amico!",
-        "Fammi riflettere un momento... ok, ho deciso!",
-        "Aspetta un secondo, devo fare una scelta...",
-        "mmmmm... vediamo... cosa prenderò?",
-        "Un po' indeciso... vediamo cosa c'è di buono!",
-        "Voglio un momento per scegliere, non voglio sbagliare!"
+        ".........Mmmmmm.. un attimo che penso a cosa prendere amico!",
+        ".........Fammi riflettere un momento... ok, ho deciso!",
+        ".........Aspetta un secondo, devo fare una scelta...",
+        ".........mmmmm... vediamo... cosa prenderò?",
+        ".........Un po' indeciso... vediamo cosa c'è di buono!",
+        ".........Voglio un momento per scegliere, non voglio sbagliare!"
     };
 
     private void Start()
     {
+        // Get the TTS Instance
+        ttsManager = TTSManager.Instance;
+
         cloudController = GetComponent<ThinkingCloudController>();
 
         if (cloudController == null)
@@ -85,9 +90,14 @@ public class FoodChooser : MonoBehaviour
 
     private void ChooseFoodFromMenu()
     {
-        Dictionary<string, List<string>> menuItems = menuReading.menuItems;
-        Debug.Log("Cibi disponibili: " + string.Join(", ", menuItems.Select(item => $"{item.Key} ({string.Join(", ", item.Value)})")));
+        Debug.LogError("CHOOSE FROM MENU PARTITOOOOOO");
+        STTTest sttTestScript = sttTestObject.GetComponent<STTTest>();
+    
+        Dictionary<string, List<(string Name, int Calories)>> menuItems = menuReading.menuItems;
+        Debug.Log("Cibi disponibili FOODOODCHOOSEERR: " + string.Join(", ", menuItems.Select(item => $"{item.Key} ({string.Join(", ", item.Value)})")));
 
+        sttTestScript.setMenuItems(menuItems);
+        
         // Percorso del file aggiornato
         string updatedFilePath = Path.Combine(Application.persistentDataPath, "UpdatedMenu.inkjson");
 
@@ -100,7 +110,9 @@ public class FoodChooser : MonoBehaviour
 
             try
             {
-                DialogueManager.GetInstance().EnterDialogueMode(updatedInkJsonFile);
+                DialogueManager dialogueManager = DialogueManager.GetInstance();
+                dialogueManager.setSource("inside");
+                dialogueManager.EnterDialogueMode(updatedInkJsonFile);
             }
             catch (System.Exception ex)
             {
@@ -119,7 +131,7 @@ public class FoodChooser : MonoBehaviour
         return responses[randomIndex];
     }
 
-    private void UpdateInkJson(Dictionary<string, List<string>> menuItems, string filePath)
+    private void UpdateInkJson(Dictionary<string, List<(string, int)>> menuItems, string filePath)
     {
         if (baseInkJsonFile == null)
         {

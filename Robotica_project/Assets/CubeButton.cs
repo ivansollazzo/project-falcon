@@ -30,7 +30,9 @@ public class CubeButton : MonoBehaviour
     {
         // Azione da eseguire quando il bottone viene cliccato
         Debug.Log("Bottone cliccato!");
-        DialogueManager.GetInstance().EnterDialogueMode(inkJSON);
+        DialogueManager dialogueManager = DialogueManager.GetInstance();
+        dialogueManager.setSource("outside");
+        dialogueManager.EnterDialogueMode(inkJSON);
     }
 
     private void OnMouseEnter()

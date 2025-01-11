@@ -22,8 +22,8 @@ public class WaitingState : State {
 
     public override void EnterState() {
         Debug.Log("Entered the WAITING state! Robot is waiting...");
-        ttsManager = robotController.GetTTSManager();
-        ttsManager.Speak("Ho rilevato un ostacolo. Aspetta un attimo per favore!");
+        ttsManager = TTSManager.Instance;
+        //ttsManager.Speak("Ho rilevato un ostacolo.");
     }
 
     public override void ExecuteState() {

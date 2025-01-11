@@ -23,7 +23,7 @@ public class MenuReading : MonoBehaviour
 
     public bool menuReaded = false;
     public bool firstRetrieve = false;
-    public Dictionary<string, List<string>> menuItems = new Dictionary<string, List<string>>();
+    public Dictionary<string, List<(string Name, int Calories)>> menuItems = new Dictionary<string, List<(string Name, int Calories)>>();
 
     private IDriver driver;
 
@@ -31,6 +31,10 @@ public class MenuReading : MonoBehaviour
 
     async void Start()
     {
+        // Get the TTS Instance
+        ttsManager = TTSManager.Instance;
+
+
         string uri = "bolt://localhost:7689";
         string user = "neo4j";
         string password = "PeraCotta10$";
@@ -50,14 +54,14 @@ public class MenuReading : MonoBehaviour
         }
     }
 
-    private async Task<Dictionary<string, List<string>>> RetrieveMenu()
+    private async Task<Dictionary<string, List<(string, int)>>> RetrieveMenu()
     {
         Debug.Log("Recupero dei cibi con priorità dal database...");
 
-        Dictionary<string, List<string>> menuItems = new Dictionary<string, List<string>>
+        Dictionary<string, List<(string, int)>> menuItems = new Dictionary<string, List<(string, int)>>
         {
-            { "Prioritario", new List<string>() },
-            { "Normale", new List<string>() }
+            { "Prioritario", new List<(string, int)>() },
+            { "Normale", new List<(string, int)>() }
         };
 
         try
@@ -66,18 +70,18 @@ public class MenuReading : MonoBehaviour
             {
                 var result = await session.ExecuteReadAsync(async tx =>
                 {
-                    // Query per recuperare solo i cibi disponibili
+                    // Query per recuperare solo i cibi disponibili con le calorie
                     var queryResult = await tx.RunAsync(@"
                         // Recupera i cibi prioritari
                         MATCH (robot:ROBOT {name: 'Assistente Ordini'})-[:PROPONE_PRIORITARIO]->(item:MENU_ITEM)
                         WHERE item.available = true
-                        RETURN item.name AS name, item.type AS type, 'Prioritario' AS priority
+                        RETURN item.name AS name, item.type AS type, item.calories AS calories, 'Prioritario' AS priority
                         UNION
                         // Recupera i cibi normali escludendo quelli prioritari
                         MATCH (robot:ROBOT {name: 'Assistente Ordini'})-[:PROPONE]->(item:MENU_ITEM)
                         WHERE item.available = true
                         AND NOT (robot)-[:PROPONE_PRIORITARIO]->(item)
-                        RETURN item.name AS name, item.type AS type, 'Normale' AS priority
+                        RETURN item.name AS name, item.type AS type, item.calories AS calories, 'Normale' AS priority
                     ");
                     return await queryResult.ToListAsync();
                 });
@@ -88,18 +92,19 @@ public class MenuReading : MonoBehaviour
                 {
                     string name = record["name"].As<string>();
                     string type = record["type"].As<string>();
+                    int calories = record["calories"].As<int>();
                     string priority = record["priority"].As<string>();
 
                     if (priority == "Prioritario")
                     {
-                        menuItems["Prioritario"].Add($"{name}");
+                        menuItems["Prioritario"].Add((name, calories));
                     }
                     else if (priority == "Normale")
                     {
-                        menuItems["Normale"].Add($"{name}");
+                        menuItems["Normale"].Add((name, calories));
                     }
 
-                    Debug.Log($"Cibo recuperato: {name},  Priorità: {priority}");
+                    Debug.Log($"Cibo recuperato: {name}, Calorie: {calories}, Priorità: {priority}");
                 }
             }
         }
@@ -110,6 +115,7 @@ public class MenuReading : MonoBehaviour
 
         return menuItems;
     }
+
 
 
 
@@ -144,8 +150,12 @@ public class MenuReading : MonoBehaviour
             if (menuItems["Prioritario"].Count > 0) // Controlla se ci sono cibi prioritari
             {
                 Debug.Log("CIBI PRIOTIARI TROVATI VAI TTS PARLA");
-                menuText = "....................In base alle tue preferenze , nel menu aggiornato ci sono: ";
-                menuText += string.Join(", ", menuItems["Prioritario"]) + "...........";
+
+                // Aspetto 6 secondi
+                yield return new WaitForSeconds(6);
+
+                menuText = "In base alle tue preferenze, nel menu aggiornato ci sono: ";
+                menuText += string.Join(", ", menuItems["Prioritario"]) + "calorie";
 
                 if (ttsManager != null)
                 {
@@ -156,8 +166,8 @@ public class MenuReading : MonoBehaviour
             if (menuItems["Normale"].Count > 0) // Solo cibi con priorità normale
             {
                 Debug.Log("CIBI NORMALE TROVATI VAI TTS PARLA");
-                menuText1 = "...........In base alle tue intolleranze, nel menu aggiornato ci sono questi cibi, anche se non sono i tuoi preferiti: ";
-                menuText1 += string.Join(", ", menuItems["Normale"]) + ".";
+                menuText1 = ".........................In base alle tue intolleranze, nel menu aggiornato ci sono questi cibi, anche se non sono i tuoi preferiti: ";
+                menuText1 += string.Join(", ", menuItems["Normale"]) + "calorie.";
             }
             else
             {

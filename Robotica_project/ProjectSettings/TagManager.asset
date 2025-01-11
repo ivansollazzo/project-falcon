@@ -8,6 +8,7 @@ TagManager:
   - Car
   - BlockedCell
   - Checkout Screens
+  - Bench
   layers:
   - Default
   - TransparentFX

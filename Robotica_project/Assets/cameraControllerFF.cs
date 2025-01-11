@@ -8,15 +8,15 @@ public class CameraControllerFF : MonoBehaviour
     private bool isFollowingRobot = true; // Flag per determinare se seguire il robot
 
     [Header("Posizione iniziale della camera")]
-    public Vector3 initialOffset = new Vector3(0, 10, -10); // Offset iniziale rispetto al robot
+    public Vector3 initialOffset = new Vector3(0, 5, -5); // Offset iniziale rispetto al robot
     public float initialTransitionSpeed = 2.0f; // Velocità di transizione verso la posizione iniziale
 
     [Header("Posizione sulla destinazione")]
-    public Vector3 destinationOffset = new Vector3(0, 15, -5); // Offset rispetto alla destinazione
+    public Vector3 destinationOffset = new Vector3(-2, 2, 2.2f); // Offset rispetto alla destinazione
     public float destinationTransitionSpeed = 2.0f; // Velocità di transizione verso la destinazione
 
     [Header("Posizione durante il follow del robot")]
-    public Vector3 followOffset = new Vector3(0, 8, -12); // Offset durante il follow
+    public Vector3 followOffset = new Vector3(0, 2.5f, -4); // Offset durante il follow
     public float followTransitionSpeed = 2.5f; // Velocità di transizione durante il follow
 
     private void Start()

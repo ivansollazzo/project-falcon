@@ -19,24 +19,40 @@ public class OnClickScript : MonoBehaviour
     }
 
     // Metodo chiamato quando il bottone viene cliccato
-    public void OnButtonClick()
+    public void OnButtonClick(string source)
     {
         
         Debug.Log("Scelta button cliccata");
+        Debug.Log("sourceEeEeeEeeEeeEeeEeEeeeeeEeeE: " + source);
 
         if (sttTestObject != null)
         {
             // Ottieni il componente STTTest dal GameObject
             STTTest sttTestScript = sttTestObject.GetComponent<STTTest>();
 
-            if (sttTestScript != null)
+            if (source.Equals("outside"))
             {
-                // Chiama una funzione nello script STTTest
-                sttTestScript.Speaking(); // Sostituisci "YourFunction" con il nome del metodo da chiamare
+                if (sttTestScript != null)
+                {
+                    // Chiama una funzione nello script STTTest
+                    sttTestScript.Speaking(); // Sostituisci "YourFunction" con il nome del metodo da chiamare
+                }
+                else
+                {
+                    Debug.LogError("Il componente STTTest non è presente nel GameObject STTTest.");
+                }
             }
-            else
+            else if (source.Equals("inside"))
             {
-                Debug.LogError("Il componente STTTest non è presente nel GameObject STTTest.");
+                if (sttTestScript != null)
+                {
+                    // Chiama una funzione nello script STTTest
+                    sttTestScript.Ordering(); // Sostituisci "YourFunction" con il nome del metodo da chiamare
+                }
+                else
+                {
+                    Debug.LogError("Il componente STTTest non è presente nel GameObject STTTest.");
+                }
             }
         }
     }

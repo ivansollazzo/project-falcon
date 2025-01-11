@@ -24,7 +24,7 @@ public class PlanningState : State
         this.robotController = stateMachine.gameObject.GetComponent<RobotController>();
         this.destination = robotController.GetDestination();
         this.grid = GridManager.Instance.GetGrid();
-        this.ttsManager = robotController.GetTTSManager();
+        this.ttsManager = TTSManager.Instance;
 
         // Ottenere la CameraController dalla scena (modifica se necessario)
         this.cameraController = Camera.main.GetComponent<CameraController>();

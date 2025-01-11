@@ -13,7 +13,7 @@ public class ArrivalState : State
     {
         // Get the robot controller
         RobotController robotController = stateMachine.gameObject.GetComponent<RobotController>();
-        TTSManager ttsManager = robotController.GetTTSManager();
+        TTSManager ttsManager = TTSManager.Instance;
 
         // Speak the arrival message
         ttsManager.Speak("Sei arrivato a destinazione.");

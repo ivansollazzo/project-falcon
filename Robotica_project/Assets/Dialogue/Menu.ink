@@ -1,8 +1,7 @@
 -> start
 
 == start ==
-Benvenuto nel menu!
-Ecco le opzioni disponibili:
+Benvenuto nel menu! Ecco le opzioni disponibili:
 -> menu_section
 -> END
 

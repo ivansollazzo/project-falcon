@@ -7,7 +7,7 @@ public class TTSTest : MonoBehaviour
     void Start()
     {
         // Get the TTSManager component
-        this.ttsManager = this.gameObject.GetComponent<TTSManager>();
+        this.ttsManager = TTSManager.Instance;
 
         // Add voice objects to the queue
         ttsManager.Speak("Cough! Cough!");

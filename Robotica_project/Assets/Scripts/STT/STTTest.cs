@@ -10,6 +10,10 @@ public class STTTest : MonoBehaviour
 {
     [SerializeField]
     private TextAsset inkJSON; 
+
+    [SerializeField]
+    private TextAsset inkJSON2; 
+
     private GameObject robot;
     private RobotController robotController;
 
@@ -99,7 +103,6 @@ public class STTTest : MonoBehaviour
         else
         {
             DialogueManager dialogueManager = DialogueManager.GetInstance();
-            dialogueManager.setSource("inside");
             dialogueManager.EnterDialogueMode(inkJSON);
             Debug.Log("I cannot understand what you said");
         }
@@ -123,13 +126,11 @@ public class STTTest : MonoBehaviour
         // Start the speech-to-text engine and get the output asynchronously
         string output = await sttManager.Speak();
 
+        output = output.ToString();
+
+
         // Transform output to lower case, trim whitespace, split it into a list, and clean up each word
-        List<string> outputList = output
-        .Trim() // Remove leading and trailing whitespace
-        .ToLower() // Convert to lowercase
-        .Split(new[] { ' ', ',', ';' }, StringSplitOptions.RemoveEmptyEntries) // Split by spaces, commas, or semicolons
-        .Select(word => word.Trim()) // Trim each word individually
-        .ToList(); // Convert to a list
+        List<string> outputList = output.Trim().ToLower().Split(new[] { ' ', ',', ';' }, StringSplitOptions.RemoveEmptyEntries).Select(word => word.Trim()).ToList();
 
         Debug.Log("Output: " + output);
         
@@ -166,6 +167,8 @@ public class STTTest : MonoBehaviour
          if (totalCalories > bmr)
         {
             ttsManager.Speak("Mi dispiace, ma hai superato il tuo fabbisogno calorico giornaliero. Ti consiglio di scegliere qualcos'altro.");
+            DialogueManagerOrder dialogueManager = DialogueManagerOrder.GetInstance();
+            dialogueManager.EnterDialogueMode(inkJSON2);
         }
         else
         {
@@ -175,7 +178,10 @@ public class STTTest : MonoBehaviour
             ttsManager.Speak(dialogue);
 
             //lo portaq al tavolo
-            robotController.SetDestination(new Vector3(-9.914f, 0.199999f, 1.938766f));
+            robotController.SetDestination(new Vector3(-8, 0, 4));
+            DialogueManagerOrder.GetInstance().ExitDialogueMode();
+            ttsManager.Speak("Il tuo ordine è stato preso in carico. Andiamo ad accomodarci al tavolo.");
+
         }
         }
 

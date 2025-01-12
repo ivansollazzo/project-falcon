@@ -19,9 +19,6 @@ public class DialogueManager : MonoBehaviour
     private TextMeshProUGUI vocalChoiceText;
 
     private Story currentStory;
-
-    public string source;
-
     public bool isDialogueActive;
     private Button currentChoiceButton;
 
@@ -35,9 +32,6 @@ public class DialogueManager : MonoBehaviour
         instance = this;
     }
 
-    public void setSource(string origin){
-        source = origin;
-    }
 
     public static DialogueManager GetInstance()
     {
@@ -68,7 +62,7 @@ public class DialogueManager : MonoBehaviour
         // Gestisce il click destro del mouse
         if (Input.GetMouseButtonDown(1))
         {
-            SelectHighlightedChoice(source);
+            SelectHighlightedChoice();
         }
     }
 
@@ -134,8 +128,8 @@ public class DialogueManager : MonoBehaviour
         currentChoiceButton.onClick.RemoveAllListeners();
         currentChoiceButton.onClick.AddListener(() =>
         {
-            Debug.Log("dialogye manager SOURCEEEEE :"+source);
-            onClickScript.OnButtonClick(source);
+            Debug.Log("dialogye manager per muoversi :");
+            onClickScript.OnButtonClick();
         });
     }
     else
@@ -162,7 +156,7 @@ public class DialogueManager : MonoBehaviour
         currentStory.ChooseChoiceIndex(choiceIndex);
     }
 
-    private void SelectHighlightedChoice(String source)
+    private void SelectHighlightedChoice()
 {
     if (currentStory.currentChoices.Count > 0)
     {

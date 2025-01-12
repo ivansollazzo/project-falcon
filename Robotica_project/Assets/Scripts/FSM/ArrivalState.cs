@@ -18,6 +18,14 @@ public class ArrivalState : State
         // Speak the arrival message
         ttsManager.Speak("Sei arrivato a destinazione.");
 
+        //questo deve essere richiamato solo quando sono nella scena di city
+        if (stateMachine.gameObject.scene.name == "City")
+        {
+            // Get the camera controller
+            CameraController cameraController = Camera.main.GetComponent<CameraController>();
+            cameraController.LookAtRobot();
+        }
+
         Debug.Log("Arrivato! Pronto per la prossima Destinazione");
         robotController.ClearDestination();
         stateMachine.SetState(new StandbyState(stateMachine));

@@ -1,10 +1,10 @@
--> start
+-> main
 
-== start ==
-Benvenuto nel menu! Ecco le opzioni disponibili:
--> menu_section
--> END
+=== main ===
+Benvenuto, cosa desideri ordinare? Usa la scelta vocale per scegliere cio che è disponibile nel menu.
++[Vocal Choice Order]
+    ->chosen("Vocal Choice Order")
 
-== menu_section ==
-TODO: Le opzioni saranno aggiornate dinamicamente.
+=== chosen(chosenX) ===
+Hai scelto : {chosenX}!
 -> END

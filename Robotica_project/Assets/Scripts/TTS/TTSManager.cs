@@ -47,7 +47,16 @@ public class TTSManager : MonoBehaviour
 
     void Update()
     {
+        // Process the queue
         ProcessQueue();
+    }
+
+    public void ClearQueue() {
+        // Clear the queue
+        voiceQueue.Clear();
+
+        // Clear the spoken texts timestamps
+        spokenTextsTimestamps.Clear();
     }
 
     public void ProcessQueue()

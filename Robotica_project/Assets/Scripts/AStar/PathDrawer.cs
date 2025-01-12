@@ -64,9 +64,6 @@ public class PathDrawer : MonoBehaviour
         
         // Poi esegui la dissolvenza
         yield return StartCoroutine(FadeOutPath());
-        
-        // Infine, pulisci
-        ClearPath();
     }
 
     private IEnumerator AnimatePathDrawing()

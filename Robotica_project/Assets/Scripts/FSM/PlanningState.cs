@@ -52,7 +52,10 @@ public class PlanningState : State
     private IEnumerator WaitForPlanning()
     {
         // Aspetta un po' prima di iniziare la pianificazione, ad esempio 3 secondi
-        yield return new WaitForSeconds(3); 
+        yield return new WaitForSeconds(3);
+
+        // Clear the queue
+        ttsManager.ClearQueue();
 
         // Dopo il delay, inizia la pianificazione del percorso
         stateMachine.StartCoroutine(ExecutePlanning());
@@ -116,7 +119,7 @@ public class PlanningState : State
             }
 
             // Feedback vocale
-            ttsManager.Speak("Pianificazione completata. Sto per iniziare la navigazione. Règgiti forte!");
+            ttsManager.Speak("Grazie ai miei calcoli ho trovato il percorso più sicuro e veloce. Sto per iniziare la navigazione. Règgiti forte!");
 
 
             yield return new WaitForSeconds(8);

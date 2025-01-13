@@ -144,10 +144,18 @@ public class DialogueManagerOrder : MonoBehaviour
     {
         Debug.LogWarning("OnClickScript non trovato sul bottone vocalChoice!");
     }
+ // Seleziona la scelta nel sistema di input
+    StartCoroutine(SelectChoice());
+}
 }
 
-}
 
+    private IEnumerator SelectChoice()
+    {
+        EventSystem.current.SetSelectedGameObject(null);
+        yield return new WaitForEndOfFrame();
+        EventSystem.current.SetSelectedGameObject(vocalChoice);
+    }
 
 
     public void MakeChoice(int choiceIndex)

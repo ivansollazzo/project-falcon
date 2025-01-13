@@ -143,6 +143,8 @@ public class PathDrawer : MonoBehaviour
 
     private void OnDrawGizmos()
     {
+        if (Camera.current == Camera.main) return;
+
         if (path == null || path.Count == 0)
             return;
 

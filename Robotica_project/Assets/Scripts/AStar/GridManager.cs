@@ -29,6 +29,8 @@ public class GridManager : MonoBehaviour
         GenerateGrid();
         Debug.Log("Griglia generata con successo.");
         DetectBlockedCells();
+
+        // Get the robot
     }
 
     public Cell[,] GetGrid()
@@ -96,6 +98,9 @@ public class GridManager : MonoBehaviour
     // Metodo per disegnare la griglia usando Gizmos
     private void OnDrawGizmos()
     {
+        // Return if using the camera main or not in scene mode
+        if (Camera.current == Camera.main) return;
+
         if (grid == null) return;
 
         for (int x = 0; x < gridWidth; x++)

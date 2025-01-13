@@ -29,16 +29,17 @@ public class MenuReading : MonoBehaviour
 
     public FoodChooser foodChooser;
 
+    private List<Vector3> rayOrigins = new List<Vector3>(); // Aggiungi una lista per memorizzare gli origini dei raggi
+    private List<Vector3> rayDirections = new List<Vector3>(); // Aggiungi una lista per memorizzare le direzioni dei raggi
+
     async void Start()
     {
         // Get the TTS Instance
         ttsManager = TTSManager.Instance;
 
-
-        string uri = "bolt://localhost:7687";
+        string uri = "bolt://localhost:7689";
         string user = "neo4j";
         string password = "PeraCotta10$";
-
 
         Debug.Log("Inizializzazione del driver Neo4j...");
 
@@ -116,18 +117,14 @@ public class MenuReading : MonoBehaviour
         return menuItems;
     }
 
-
-
-
-
-
     void Update()
     {
         if (!isRetrievingMenu && (!firstRetrieve || Time.time - lastMenuUpdateTime > menuUpdateCooldown) && !foodChooser.foodChoosen)
         {
             //Debug.Log("ATTENZIONE RETRIEVING AVVIATO: TEMPO PASSATO:"+Time.time+ " LAST UPDATE:"+lastMenuUpdateTime+" COOLDOWN:"+menuUpdateCooldown);
             checkoutDetected = CheckForCheckoutScreens();
-            if (checkoutDetected){
+            if (checkoutDetected)
+            {
                 Debug.Log("Checkout Screen rilevato! Inizio interazione...");
                 StartCoroutine(RetrieveMenuCoroutine());
             }
@@ -196,7 +193,6 @@ public class MenuReading : MonoBehaviour
         menuReaded = true;
     }
 
-
     private bool CheckForCheckoutScreens()
     {
         Vector3 rayOrigin = transform.position;
@@ -206,10 +202,16 @@ public class MenuReading : MonoBehaviour
 
         float halfAngle = coneAngle / 2f;
 
+        rayOrigins.Clear();
+        rayDirections.Clear();
+
         for (int i = 0; i < numRays; i++)
         {
             float angle = Mathf.Lerp(-halfAngle, halfAngle, (float)i / (numRays - 1));
             Vector3 dir = Quaternion.Euler(0, angle, 0) * rayDirection;
+
+            rayOrigins.Add(rayOrigin);
+            rayDirections.Add(dir);
 
             RaycastHit hit;
             if (Physics.Raycast(rayOrigin, dir, out hit, detectionDistance))
@@ -217,21 +219,26 @@ public class MenuReading : MonoBehaviour
                 if (hit.collider.CompareTag("Checkout Screens"))
                 {
                     Debug.Log("Checkout Screen rilevato: " + hit.collider.name);
-                    Debug.DrawRay(rayOrigin, dir * detectionDistance, Color.blue);
                     screenDetected = true;
                 }
-                else
-                {
-                    Debug.DrawRay(rayOrigin, dir * detectionDistance, Color.green);
-                }
-            }
-            else
-            {
-                Debug.DrawRay(rayOrigin, dir * detectionDistance, Color.red);
             }
         }
 
         return screenDetected;
+    }
+
+    void OnDrawGizmos()
+    {
+        if (Camera.current == Camera.main) return;
+
+        if (rayOrigins.Count == 0 || rayDirections.Count == 0) return;
+
+        Gizmos.color = Color.blue;
+
+        for (int i = 0; i < rayOrigins.Count; i++)
+        {
+            Gizmos.DrawRay(rayOrigins[i], rayDirections[i] * detectionDistance);
+        }
     }
 
     async void OnApplicationQuit()

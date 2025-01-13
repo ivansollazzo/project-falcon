@@ -194,6 +194,8 @@ public class ParticleFilter : MonoBehaviour
     // Metodo di debug per visualizzare le particelle
     private void OnDrawGizmos()
     {
+        if (Camera.current == Camera.main) return;
+
         if (!Application.isPlaying || currentParticles == null)
             return;
 

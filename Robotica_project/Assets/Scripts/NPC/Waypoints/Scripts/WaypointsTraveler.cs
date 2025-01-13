@@ -154,17 +154,87 @@ namespace WaypointsFree
                     if (hit.collider.CompareTag("Pedestrian") && !hit.collider.CompareTag("BlockedCell"))
                     {
                         //Debug.Log("Pedone rilevato: " + hit.collider.name);
-                        Debug.DrawRay(rayOrigin, dir * detectionDistance, Color.red);
                         pedestrianDetected = true;
-                    }
-                    else
-                    {
-                        Debug.DrawRay(rayOrigin, dir * detectionDistance, Color.green);
                     }
                 }
             }
 
             return pedestrianDetected;
+        }
+
+        void OnDrawGizmos()
+        {
+            if (Camera.current == Camera.main || Camera.current == GameObject.Find("RobotCamera").GetComponent<Camera>()) return;
+
+            // Disegna i raggi per pedoni
+            DrawRaycastsForPedestrians();
+
+            // Disegna i raggi per auto
+            DrawRaycastsForCars();
+        }
+
+        void DrawRaycastsForPedestrians()
+        {
+            float detectionDistance = 3.5f; // Distanza di rilevamento pedoni
+            float coneAngle = 30f; // Angolo del cono per pedoni
+            int numRays = 10; // Numero di raggi nel cono
+            Vector3 rayOrigin = transform.position; 
+            Vector3 rayDirection = transform.forward; 
+
+            float halfAngle = coneAngle / 2f;
+
+            for (int i = 0; i < numRays; i++)
+            {
+                float angle = Mathf.Lerp(-halfAngle, halfAngle, (float)i / (numRays - 1));
+                Vector3 dir = Quaternion.Euler(0, angle, 0) * rayDirection;
+
+                RaycastHit hit;
+                if (Physics.Raycast(rayOrigin, dir, out hit, detectionDistance))
+                {
+                    if (hit.collider.CompareTag("Pedestrian") && !hit.collider.CompareTag("BlockedCell"))
+                    {
+                        Gizmos.color = Color.red; // Colore per pedoni rilevati
+                        Gizmos.DrawRay(rayOrigin, dir * detectionDistance);
+                    }
+                    else
+                    {
+                        Gizmos.color = Color.green; // Colore per i raggi senza collisioni
+                        Gizmos.DrawRay(rayOrigin, dir * detectionDistance);
+                    }
+                }
+            }
+        }
+
+        void DrawRaycastsForCars()
+        {
+            float detectionDistance = 2.5f; // Distanza di rilevamento per le auto
+            float coneAngle = 10f; // Angolo del cono per le auto
+            int numRays = 10; // Numero di raggi nel cono
+            Vector3 rayOrigin = transform.position;
+            Vector3 rayDirection = transform.forward;
+
+            float halfAngle = coneAngle / 2f;
+
+            for (int i = 0; i < numRays; i++)
+            {
+                float angle = Mathf.Lerp(-halfAngle, halfAngle, (float)i / (numRays - 1));
+                Vector3 dir = Quaternion.Euler(0, angle, 0) * rayDirection;
+
+                RaycastHit hit;
+                if (Physics.Raycast(rayOrigin, dir, out hit, detectionDistance))
+                {
+                    if (!hit.collider.CompareTag("Pedestrian") && !hit.collider.CompareTag("BlockedCell"))
+                    {
+                        Gizmos.color = Color.blue; // Colore per auto rilevate
+                        Gizmos.DrawRay(rayOrigin, dir * detectionDistance);
+                    }
+                    else
+                    {
+                        Gizmos.color = Color.green; // Colore per i raggi senza collisioni
+                        Gizmos.DrawRay(rayOrigin, dir * detectionDistance);
+                    }
+                }
+            }
         }
 
         private bool CheckForCars()
@@ -190,12 +260,7 @@ namespace WaypointsFree
                     if (!hit.collider.CompareTag("Pedestrian") && !hit.collider.CompareTag("BlockedCell"))
                     {
                         //Debug.Log("Auto rilevata: " + hit.collider.name);
-                        Debug.DrawRay(rayOrigin, dir * detectionDistance, Color.blue);
                         carDetected = true;
-                    }
-                    else
-                    {
-                        Debug.DrawRay(rayOrigin, dir * detectionDistance, Color.green);
                     }
                 }
             }

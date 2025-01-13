@@ -21,6 +21,8 @@ public class STTTest : MonoBehaviour
 
     public Dictionary<string, List<(string Name, int Calories)>> menuItems = new Dictionary<string, List<(string Name, int Calories)>>();
 
+    public ThinkingCloudController cloudController; // Riferimento al controller della nuvoletta
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -28,6 +30,13 @@ public class STTTest : MonoBehaviour
         GameObject robot = GameObject.Find("Robot");
         STTManager sttManager = robot.GetComponent<STTManager>();
         robotController = robot.GetComponent<RobotController>();
+        cloudController = GetComponent<ThinkingCloudController>();
+
+        if (cloudController == null)
+        {
+            Debug.LogError("ThinkingCloudController non trovato! Assicurati che sia assegnato al personaggio.");
+        }
+
     }
 
     public async void Speaking() // Cambiato a public
@@ -70,7 +79,7 @@ public class STTTest : MonoBehaviour
             z = 9.98f;*/
 
             Debug.Log("Robot is moving to checkout");
-            robotController.SetDestination(new Vector3(-0.48f, 0.13f, 9.98f));
+            robotController.SetDestination(new Vector3(0.081f, -0.009f, 10.175f));
             DialogueManager.GetInstance().ExitDialogueMode();
 
         
@@ -95,7 +104,7 @@ public class STTTest : MonoBehaviour
             y = 0.11999999f;
             z = 1.938766f;*/
 
-            robotController.SetDestination(new Vector3(-9.914f, 0.199999f, 1.938766f));
+            robotController.SetDestination(new Vector3(-1.64f, 0.13f, 7.21f));
             DialogueManager.GetInstance().ExitDialogueMode();
             Debug.Log("Robot is moving to entrance");
 
@@ -104,6 +113,7 @@ public class STTTest : MonoBehaviour
         {
             DialogueManager dialogueManager = DialogueManager.GetInstance();
             dialogueManager.EnterDialogueMode(inkJSON);
+            TTSManager.Instance.Speak("Mi dispiace, non ho capito cosa hai detto. Ripeti una delle opzioni disponibili: voglio entrare o voglio ordinare.");
             Debug.Log("I cannot understand what you said");
         }
 
@@ -176,6 +186,9 @@ public class STTTest : MonoBehaviour
         {
             dialogue = dialogue.TrimEnd(',', ' ') + ".";
             ttsManager.Speak(dialogue);
+
+
+            cloudController?.HideCloud();
 
             //lo portaq al tavolo
             robotController.SetDestination(new Vector3(-8, 0, 4));

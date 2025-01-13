@@ -12,7 +12,7 @@ public class BlindedPerson : MonoBehaviour
 
     async void Start()
     {
-        string uri = "bolt://localhost:7687";
+        string uri = "bolt://localhost:7689";
         string user = "neo4j";
         string password = "PeraCotta10$";
 

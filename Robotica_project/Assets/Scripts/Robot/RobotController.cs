@@ -13,7 +13,6 @@ public class RobotController : MonoBehaviour
     private TTSManager ttsManager;
     private ObstacleSensor obstacleSensor;
     private bool destinationSet = false;
-
     private Vector3 previousPosition;
     private float movementThreshold = 0.1f; // Soglia per aggiornare il filtro particellare
 
@@ -101,10 +100,6 @@ public class RobotController : MonoBehaviour
             Vector3 controlInput = Vector3.zero;
             Vector3 measurement = transform.position;
             particleFilter.UpdateParticles(controlInput, measurement);
-
-            Debug.DrawLine(transform.position, estimatedPosition, Color.yellow);
-            Debug.DrawLine(estimatedPosition, targetPosition, Color.cyan);
-            Debug.DrawRay(transform.position, transform.forward * 2.0f, Color.red);
 
             float error = Quaternion.Angle(transform.rotation, targetRotation);
             return error < 1.0f;

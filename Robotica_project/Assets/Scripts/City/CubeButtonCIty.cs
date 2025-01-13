@@ -31,6 +31,7 @@ public class CubeButtonCity : MonoBehaviour
         // Azione da eseguire quando il bottone viene cliccato
         Debug.Log("Bottone cliccato!");
         DialogueManagerCity.GetInstance().EnterDialogueMode(inkJSON);
+        TTSManager.Instance.Speak("Benvenuto a UAITF City! Seleziona il bottone Vocal choice e scegli una delle possibili destinazioni fra Bar,Negozio,Casa,Ufficio,Supermercato.");
     }
 
     private void OnMouseEnter()

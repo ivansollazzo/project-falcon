@@ -16,7 +16,7 @@ public class STTTestCity : MonoBehaviour
         GameObject robot = GameObject.Find("Robot");
         STTManager sttManager = robot.GetComponent<STTManager>();
         robotController = robot.GetComponent<RobotController>();
-    }
+    }    
 
     public async void Speaking() // Cambiato a public
     {
@@ -75,6 +75,7 @@ public class STTTestCity : MonoBehaviour
         }     
         else
         {
+            TTSManager.Instance.Speak("Mi dispiace, non ho capito cosa hai detto. Ripeti una delle opzioni disponibili: casa, ufficio,bar,supermercato e negozio");
             DialogueManagerCity.GetInstance().EnterDialogueMode(inkJSON);
             Debug.Log("I cannot understand what you said");
         }

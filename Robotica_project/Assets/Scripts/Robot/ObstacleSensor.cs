@@ -94,7 +94,7 @@ public class ObstacleSensor : MonoBehaviour
                         else if (tagName == "Cars") ttsManager.Speak("Fermo sta passando un auto");
                         else if (tagName == "Semaforo") ttsManager.Speak("Siamo davanti ad un Semaforo lo devo aggirare");
                         else if (tagName == "PaloLuce") ttsManager.Speak("Ho trovato un Palo della luce sul nostro percorso");
-                        else ttsManager.Speak("Ostacolo");
+                        else ttsManager.Speak("Ho trovato un Ostacolo sul nostro percorso");
 
                         Debug.Log($"Ostacolo rilevato a: {hit.point}");
                         this.detectedObstacle = hit.collider;

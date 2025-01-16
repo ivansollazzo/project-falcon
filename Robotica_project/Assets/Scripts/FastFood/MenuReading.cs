@@ -3,6 +3,7 @@ using Neo4j.Driver;
 using System.Threading.Tasks;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 
 public class MenuReading : MonoBehaviour
 {
@@ -136,7 +137,14 @@ public class MenuReading : MonoBehaviour
         firstRetrieve = true;
         isRetrievingMenu = true; // Imposta lo stato come "recupero in corso"
         var retrieveTask = RetrieveMenu();
+
         yield return new WaitUntil(() => retrieveTask.IsCompleted);
+
+        // Aspetto 8 secondi
+        yield return new WaitForSeconds(8);
+
+        // Clear the TTS queue
+        ttsManager.ClearQueue();
 
         if (retrieveTask.Exception == null)
         {
@@ -144,30 +152,68 @@ public class MenuReading : MonoBehaviour
             string menuText = "";
             string menuText1 = "";
 
-            if (menuItems["Prioritario"].Count > 0) // Controlla se ci sono cibi prioritari
+            // We have to shrink the list of normal items if there are more than 7 items. The list must contain only 7 items.
+            if (menuItems["Normale"].Count > 7)
             {
-                Debug.Log("CIBI PRIOTIARI TROVATI VAI TTS PARLA");
-
-                // Aspetto 6 secondi
-                yield return new WaitForSeconds(6);
-
-                // Clear the TTS queue
-                ttsManager.ClearQueue();
-
-                menuText = "In base alle tue preferenze, nel menu aggiornato ci sono: ";
-                menuText += string.Join(", ", menuItems["Prioritario"]) + "calorie";
-
-                if (ttsManager != null)
-                {
-                    ttsManager.Speak(menuText, robotic_voice: false);
-                }
+                menuItems["Normale"] = menuItems["Normale"].GetRange(0, 7);
             }
 
-            if (menuItems["Normale"].Count > 0) // Solo cibi con priorità normale
+            // Now we can read the menu
+            if (menuItems["Prioritario"].Count > 1) // Controlla se ci sono cibi prioritari
             {
-                Debug.Log("CIBI NORMALE TROVATI VAI TTS PARLA");
-                menuText1 = ".........................In base alle tue intolleranze, nel menu aggiornato ci sono questi cibi, anche se non sono i tuoi preferiti: ";
-                menuText1 += string.Join(", ", menuItems["Normale"]) + "calorie.";
+                menuText = "In base alle tue preferenze alimentari, nel menu sono disponibili questi cibi: ";
+
+                foreach (var item in menuItems["Prioritario"])
+                {
+                    // If it's the last item
+                    if (item == menuItems["Prioritario"][menuItems["Prioritario"].Count - 1])
+                    {
+                        menuText += " e ";
+                        menuText += item.Name + ", con " + item.Calories + " calorie.";
+                    }
+                    else
+                    {
+                        menuText += item.Name + ", con " + item.Calories + " calorie, ";
+                    }
+                }
+            }
+            else if (menuItems["Prioritario"].Count == 1)
+            {
+                menuText = "In base alle tue preferenze alimentari, nel menu è disponibile solo questo cibo: ";
+                menuText += menuItems["Prioritario"][0].Name + ", con " + menuItems["Prioritario"][0].Calories + " calorie.";
+            }
+            else
+            {
+                menuText = "Spiacente, al momento non ci sono cibi disponibili in base alle tue preferenze.";
+            }
+
+            if (ttsManager != null)
+            {
+                ttsManager.Speak(menuText, robotic_voice: false);
+            }
+
+            if (menuItems["Normale"].Count > 1) // Solo cibi con priorità normale
+            {
+                menuText1 = "In base alle tue intolleranze, il menu contiene questi cibi, anche se non sono tra i tuoi preferiti: ";
+
+                foreach (var item in menuItems["Normale"])
+                {
+                    // If it's the last item
+                    if (item == menuItems["Normale"][menuItems["Normale"].Count - 1])
+                    {
+                        menuText1 += " e ";
+                        menuText1 += item.Name + ", con " + item.Calories + " calorie.";
+                    }
+                    else
+                    {
+                        menuText1 += item.Name + ", con " + item.Calories + " calorie, ";
+                    }
+                }
+            }
+            else if (menuItems["Normale"].Count == 1)
+            {
+                menuText1 = "In base alle tue intolleranze, il menu contiene solo questo cibo, anche se non è tra i tuoi preferiti: ";
+                menuText1 += menuItems["Normale"][0].Name + " con " + menuItems["Normale"][0].Calories + " calorie.";
             }
             else
             {

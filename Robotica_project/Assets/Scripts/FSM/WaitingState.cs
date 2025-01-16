@@ -121,7 +121,7 @@ public class WaitingState : State {
         }
 
         if (detectedObstacle == null) {
-            ttsManager.Speak("Ostacolo spostato. Riprendo la navigazione.");
+            ttsManager.Speak("Riprendo la navigazione.");
             robotController.SetMoving(true);
             stateMachine.SetState(currentNavigationState);
         }

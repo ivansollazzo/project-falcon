@@ -4,15 +4,16 @@ using Unity.Collections;
 using System.IO.Compression;
 using System.Collections.Generic;
 using System;
+using System.Text.RegularExpressions;
 using System.Linq;
 
 public class STTTest : MonoBehaviour
 {
     [SerializeField]
-    private TextAsset inkJSON; 
+    private TextAsset inkJSON;
 
     [SerializeField]
-    private TextAsset inkJSON2; 
+    private TextAsset inkJSON2;
 
     private GameObject robot;
     private RobotController robotController;
@@ -44,7 +45,7 @@ public class STTTest : MonoBehaviour
         // Get robot game object name
         Debug.Log("Speaking from button click GUI");
 
-         
+
         GameObject robot = GameObject.Find("Robot");
         robotController = robot.GetComponent<RobotController>();
         STTManager sttManager = robot.GetComponent<STTManager>();
@@ -57,7 +58,7 @@ public class STTTest : MonoBehaviour
 
         Debug.Log("Output: " + output);
 
-        if (output == "ordina" || output == "voglio ordinare" || output == "ordino")
+        if (output == "ordina" || output == "voglio ordinare" || output == "ordino" || output == "ordinare")
         {
             //bring the robot to the "Ordering screens" tag object
             /*
@@ -82,9 +83,9 @@ public class STTTest : MonoBehaviour
             robotController.SetDestination(new Vector3(0.081f, -0.009f, 10.175f));
             DialogueManager.GetInstance().ExitDialogueMode();
 
-        
+
         }
-        else if (output == "entra" || output == "voglio entrare")
+        else if (output == "entra" || output == "voglio entrare" || output == "entrare")
         {
             //bring the robot to the "Entrance" tag object
 
@@ -117,7 +118,7 @@ public class STTTest : MonoBehaviour
             Debug.Log("I cannot understand what you said");
         }
 
-        
+
 
     }
 
@@ -127,7 +128,6 @@ public class STTTest : MonoBehaviour
         // Get robot game object name
         Debug.Log("Speaking from button click GUI");
 
-         
         GameObject robot = GameObject.Find("Robot");
         robotController = robot.GetComponent<RobotController>();
         STTManager sttManager = robot.GetComponent<STTManager>();
@@ -136,45 +136,63 @@ public class STTTest : MonoBehaviour
         // Start the speech-to-text engine and get the output asynchronously
         string output = await sttManager.Speak();
 
-        output = output.ToString();
+        // Pre-process the output
+        output = output.ToString().ToLower();
+
+        // Regex pattern to handle splitting
+        string pattern = @"\b(?:e|,|;|\s+)\b";
 
 
-        // Transform output to lower case, trim whitespace, split it into a list, and clean up each word
-        List<string> outputList = output.Trim().ToLower().Split(new[] { ' ', ',', ';' }, StringSplitOptions.RemoveEmptyEntries).Select(word => word.Trim()).ToList();
+        // Split the string usando il pattern
+        List<string> outputList = Regex.Split(output, pattern)
+            .Select(word => word.Trim())
+            .Where(word => !string.IsNullOrEmpty(word))
+            .ToList();
 
         Debug.Log("Output: " + output);
-        
+
         // Get dhe BMF of the disabled person
         BlindedPerson blindedPerson = disabledPerson.GetComponent<BlindedPerson>();
         int bmr = blindedPerson.GetBMR();
 
-        // Check if the output contains any of the menu items   
-        string dialogue = "....................Dopo aver riflettuto ho scelto di prendere dal menu: ";
-        // Somma delle calorie
+        // Check if the output is a valid menu item
+        List<string> foodList = new List<string>();
+
+        // Get keys of the menuItems["Prioritario"] dictionary
+        List<string> prioritarioKeys = menuItems["Prioritario"].Select(item => item.Name.ToLower()).ToList();
+
+        // Get keys of the menuItems["Normale"] dictionary
+        List<string> normaleKeys = menuItems["Normale"].Select(item => item.Name.ToLower()).ToList();
+
+        foreach (var item in outputList)
+        {
+            if (prioritarioKeys.Contains(item))
+            {
+                foodList.Add(item);
+            }
+            else if (normaleKeys.Contains(item))
+            {
+                foodList.Add(item);
+            }
+        }
+
+        // Now that we have the list of valid menu items, we can check if the sum of their calories is less than the BMR
         int totalCalories = 0;
 
-        foreach (var item in menuItems["Prioritario"])
+        foreach (var item in foodList)
         {
-            if (outputList.Contains(item.Name.ToLower()))
+            if (prioritarioKeys.Contains(item))
             {
-                dialogue += item.Name + ", ";
-                totalCalories += item.Calories;
+                totalCalories += menuItems["Prioritario"].Where(menuItem => menuItem.Name.ToLower() == item).Select(menuItem => menuItem.Calories).First();
             }
-        }
-        // Se non sono stati trovati cibi prioritari, controlla i normali
-        if (totalCalories < bmr)
-        {
-            foreach (var item in menuItems["Normale"])
+            else if (normaleKeys.Contains(item))
             {
-                if (outputList.Contains(item.Name.ToLower()))
-                {
-                    dialogue += item.Name + ", ";
-                    totalCalories += item.Calories;
-                }
+                totalCalories += menuItems["Normale"].Where(menuItem => menuItem.Name.ToLower() == item).Select(menuItem => menuItem.Calories).First();
             }
         }
 
-         if (totalCalories > bmr)
+        // Se il numero di calorie supera il fabbisogno calorico, avvisa l'utente
+        if (totalCalories > bmr)
         {
             ttsManager.Speak("Mi dispiace, ma hai superato il tuo fabbisogno calorico giornaliero. Ti consiglio di scegliere qualcos'altro.");
             DialogueManagerOrder dialogueManager = DialogueManagerOrder.GetInstance();
@@ -182,22 +200,48 @@ public class STTTest : MonoBehaviour
         }
         else
         {
-            if (dialogue.EndsWith(", "))
-        {
-            dialogue = dialogue.TrimEnd(',', ' ') + ".";
+            // Check if the output contains any of the menu items   
+            string dialogue = "Sto inserendo nel tuo ordine i cibi che hai scelto: ";
+
+            // Add the food items to the dialogue. If list is a single item, add it without a comma
+            if (foodList.Count == 1)
+            {
+                dialogue += foodList[0] + ".";
+            }
+            else
+            {
+                foreach (var item in foodList)
+                {
+                    // If it's the last item, add a period
+                    if (item == foodList.Last())
+                    {
+                        dialogue += "e ";
+                        dialogue += item + ".";
+                    }
+                    else
+                    {
+                        dialogue += item + ", ";
+                    }
+                }
+            }
+
+            // Let the robot speak the dialogue
             ttsManager.Speak(dialogue);
 
+            // Aspetta che il robot abbia finito di parlare
+            await Task.Delay(TimeSpan.FromSeconds(3));
 
             cloudController?.HideCloud();
 
-            //lo portaq al tavolo
+            //lo porta al tavolo
             robotController.SetDestination(new Vector3(-8, 0, 4));
             DialogueManagerOrder.GetInstance().ExitDialogueMode();
             ttsManager.Speak("Il tuo ordine è stato preso in carico. Andiamo ad accomodarci al tavolo.");
 
-        }
-        }
+            // Aspetta che il robot abbia finito di parlare
+            await Task.Delay(TimeSpan.FromSeconds(6));
 
+        }
     }
 
     public void setMenuItems(Dictionary<string, List<(string, int)>> menuItemsSource)

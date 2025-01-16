@@ -16,17 +16,17 @@ public class FoodChooser : MonoBehaviour
 
     public bool foodChoosen = false;
     private bool isThinking = false;
-    private float thinkingTime = 30f; // Tempo di attesa per il "pensiero"
+    private float thinkingTime = 15f; // Tempo di attesa per il "pensiero"
     private float thinkingTimer = 0f; // Timer per il "pensiero"
 
     private List<string> responses = new List<string>
     {
-        ".........Mmmmmm.. un attimo che penso a cosa prendere amico!",
-        ".........Fammi riflettere un momento... ok, ho deciso!",
-        ".........Aspetta un secondo, devo fare una scelta...",
-        ".........mmmmm... vediamo... cosa prenderò?",
-        ".........Un po' indeciso... vediamo cosa c'è di buono!",
-        ".........Voglio un momento per scegliere, non voglio sbagliare!"
+        "Cosa scegli dal menu?",
+        "Cosa prenderai?",
+        "Fai la tua scelta, io ti aspetto!",
+        "Hai già deciso cosa prendere?",
+        "Hai già scelto cosa mangiare?",
+        "Mamma mia, che fame! Cosa sceglierai?"
     };
 
     private void Start()
@@ -90,31 +90,30 @@ public class FoodChooser : MonoBehaviour
 
     private void ChooseFoodFromMenu()
     {
-        Debug.Log("CHOOSE FROM MENU PARTITOOOOOO");
+        Debug.Log("CHOOSE FROM MENU PARTITO");
         STTTest sttTestScript = sttTestObject.GetComponent<STTTest>();
-    
+
         Dictionary<string, List<(string Name, int Calories)>> menuItems = menuReading.menuItems;
-        Debug.Log("Cibi disponibili FOODOODCHOOSEERR: " + string.Join(", ", menuItems.Select(item => $"{item.Key} ({string.Join(", ", item.Value)})")));
+        Debug.Log("Cibi disponibili FOODCHOSER: " + string.Join(", ", menuItems.Select(item => $"{item.Key} ({string.Join(", ", item.Value)})")));
 
         sttTestScript.setMenuItems(menuItems);
 
-            try
-            {
-                Debug.Log("DIALOGUE MANAGER ORDER");
-                 DialogueManagerOrder.GetInstance().EnterDialogueMode(baseInkJsonFile);
-            }
-            catch (System.Exception ex)
-            {
-                Debug.LogError("Errore durante EnterDialogueMode: " + ex.Message);
-            }
+        try
+        {
+            Debug.Log("DIALOGUE MANAGER ORDER");
+            DialogueManagerOrder.GetInstance().EnterDialogueMode(baseInkJsonFile);
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError("Errore durante EnterDialogueMode: " + ex.Message);
+        }
 
     }
 
     private string GetRandomResponse()
     {
-        int randomIndex = Random.Range(0, responses.Count);
-        return responses[randomIndex];
+        return responses[Random.Range(0, responses.Count)];
     }
 
-    
+
 }

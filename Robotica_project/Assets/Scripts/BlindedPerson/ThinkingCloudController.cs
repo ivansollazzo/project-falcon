@@ -41,6 +41,9 @@ public class ThinkingCloudController : MonoBehaviour
         {
             cloudAnimator.SetTrigger("Hide"); // Attiva il trigger Hide
             Invoke(nameof(DeactivateCloud), 0.5f); // Disattiva dopo la durata dell'animazione
+
+            // Destroy the GameObject after the animation duration
+            Destroy(thinkingCloud, 0.5f);
         }
     }
 

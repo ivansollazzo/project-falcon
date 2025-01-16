@@ -1,1 +1,1 @@
-Scelta non valida! Riprova! Scegli dei cibi disponibili!
+Scelta non valida! Hai superato il fabbisogno calorico giornaliero, Ti consiglio di prendere un pasto più bilanciato scegliendo dai cibi disponibili!

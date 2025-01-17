@@ -79,7 +79,19 @@ public class ObstacleSensor : MonoBehaviour
 
             if (Physics.Raycast(coneOrigin, rayDirection, out RaycastHit hit, range, LayerMask.GetMask("Obstacle", "Pedestrians", "Cars")))
             {
-                if (hit.distance < minimumDistance)
+                float minDist = 0;
+
+                // If it's a pedestrian, the minimum distance must be higher of a 0.8 factor
+                if (LayerMask.LayerToName(hit.collider.gameObject.layer) == "Pedestrians")
+                {
+                    minDist = 1.0f;
+                }
+                else {
+                    minDist = minimumDistance;
+                }
+
+                // Now we can check if the distance is less than the minimum distance
+                if (hit.distance < minDist)
                 {
                     if (!foundObstacle)
                     {
@@ -136,7 +148,7 @@ public class ObstacleSensor : MonoBehaviour
             Vector3 rayDirection = rayRotation * Vector3.forward;
 
             Gizmos.color = Color.red;
-            Gizmos.DrawRay(coneOrigin, rayDirection * rayLength); // Disegna il raggio come Gizmo
+            Gizmos.DrawRay(coneOrigin, rayDirection * rayLength);
         }
     }
 }

@@ -152,10 +152,10 @@ public class MenuReading : MonoBehaviour
             string menuText = "";
             string menuText1 = "";
 
-            // We have to shrink the list of normal items if there are more than 7 items. The list must contain only 7 items.
-            if (menuItems["Normale"].Count > 7)
+            // We have to shrink the list of normal items if there are more than 10 items. The list must contain only 10 items.
+            if (menuItems["Normale"].Count > 10)
             {
-                menuItems["Normale"] = menuItems["Normale"].GetRange(0, 7);
+                menuItems["Normale"] = menuItems["Normale"].GetRange(0, 10);
             }
 
             // Now we can read the menu

@@ -137,9 +137,6 @@ public class RobotController : MonoBehaviour
                 previousPosition = transform.position; // Aggiorna la posizione precedente
             }
 
-            Debug.DrawLine(transform.position, estimatedPosition, Color.yellow);
-            Debug.DrawLine(estimatedPosition, targetPosition, Color.cyan);
-
             if (distanceToTarget <= 0.25f)
             {
                 if (this.disabledPersonAnimator != null)

@@ -1,9 +1,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class WaitingState : State {
+public class WaitingState : State
+{
     private RobotController robotController;
-    
+
     private ObstacleSensor obstacleSensor;
 
     private NavigationState currentNavigationState;
@@ -12,7 +13,8 @@ public class WaitingState : State {
     private float waitingTime;
     private float elapsedTime = 0.0f;
 
-    public WaitingState(StateMachine stateMachine, float waitingTime, NavigationState navigationState) : base(stateMachine) {
+    public WaitingState(StateMachine stateMachine, float waitingTime, NavigationState navigationState) : base(stateMachine)
+    {
         this.robotController = stateMachine.gameObject.GetComponent<RobotController>();
         this.obstacleSensor = robotController.GetObstacleSensor();
         this.waitingTime = waitingTime;
@@ -20,21 +22,24 @@ public class WaitingState : State {
         robotController.SetMoving(false);
     }
 
-    public override void EnterState() {
+    public override void EnterState()
+    {
         Debug.Log("Entered the WAITING state! Robot is waiting...");
         ttsManager = TTSManager.Instance;
         //ttsManager.Speak("Ho rilevato un ostacolo.");
     }
 
-    public override void ExecuteState() {
-        
+    public override void ExecuteState()
+    {
+
         // Check if the obstacle has been removed
         Collider detectedObstacle = obstacleSensor.CheckForObstacles();
 
         elapsedTime += Time.deltaTime;
 
-        if (elapsedTime >= waitingTime) {
-            
+        if (elapsedTime >= waitingTime)
+        {
+
             ttsManager.Speak("Ostacolo fisso. Provvedo a raggirarlo per riprendere la navigazione.");
 
             // We calculate the min and max cells occupied by the obstacle
@@ -57,36 +62,45 @@ public class WaitingState : State {
             // Now we calculate min X and Z and max X and Z
             int minX, minZ, maxX, maxZ;
 
-            if (minCell.GetX() < maxCell.GetX()) {
+            if (minCell.GetX() < maxCell.GetX())
+            {
                 minX = minCell.GetX();
                 maxX = maxCell.GetX();
-            } else {
+            }
+            else
+            {
                 minX = maxCell.GetX();
                 maxX = minCell.GetX();
             }
 
-            if (minCell.GetZ() < maxCell.GetZ()) {
+            if (minCell.GetZ() < maxCell.GetZ())
+            {
                 minZ = minCell.GetZ();
                 maxZ = maxCell.GetZ();
-            } else {
+            }
+            else
+            {
                 minZ = maxCell.GetZ();
                 maxZ = minCell.GetZ();
             }
 
             // Now we set the cells as blocked from min to max of that diagonal
-            for (int z = minZ; z <= maxZ; z++) {
-                for (int x = minX; x <= maxX; x++) {
+            for (int z = minZ; z <= maxZ; z++)
+            {
+                for (int x = minX; x <= maxX; x++)
+                {
 
                     // Get the cell
                     Cell cell = GridManager.Instance.GetGrid()[x, z];
 
                     // Check if it's inside the obstacle bounds
-                    if (detectedObstacle.bounds.Contains(cell.GetWorldPosition())) {
+                    if (detectedObstacle.bounds.Contains(cell.GetWorldPosition()))
+                    {
                         // Mark the cell as blocked
                         GridManager.Instance.MarkCellAsBlocked(cell);
 
                         // We also block the adjacent cells
-                        List <Cell> adjCells = new List<Cell>();
+                        List<Cell> adjCells = new List<Cell>();
 
                         adjCells.Add(GridManager.Instance.GetGrid()[x - 1, z - 1]);
                         adjCells.Add(GridManager.Instance.GetGrid()[x + 1, z + 1]);
@@ -97,17 +111,20 @@ public class WaitingState : State {
                         adjCells.Add(GridManager.Instance.GetGrid()[x - 1, z + 1]);
                         adjCells.Add(GridManager.Instance.GetGrid()[x + 1, z - 1]);
 
-                        foreach (Cell adjCell in adjCells) {
-                            if (adjCell != null) {
+                        foreach (Cell adjCell in adjCells)
+                        {
+                            if (adjCell != null)
+                            {
 
                                 // Get the destination cell
                                 Cell endCell = GridManager.Instance.GetCellFromWorldPosition(robotController.GetDestination());
 
-                                if (adjCell.GetWorldPosition() != endCell.GetWorldPosition()) {
+                                if (adjCell.GetWorldPosition() != endCell.GetWorldPosition())
+                                {
                                     GridManager.Instance.MarkCellAsBlocked(adjCell);
-                                }               
+                                }
                             }
-                        }                       
+                        }
                     }
                 }
             }
@@ -116,18 +133,21 @@ public class WaitingState : State {
             obstacleSensor.EnableSensor(false);
 
             // Explained in the PlanningState
-
             stateMachine.SetState(new PlanningState(stateMachine));
         }
-
-        if (detectedObstacle == null) {
-            ttsManager.Speak("Riprendo la navigazione.");
-            robotController.SetMoving(true);
-            stateMachine.SetState(currentNavigationState);
+        else
+        {
+            if (detectedObstacle == null)
+            {
+                ttsManager.Speak("Riprendo la navigazione.");
+                robotController.SetMoving(true);
+                stateMachine.SetState(currentNavigationState);
+            }
         }
     }
 
-    public override void ExitState() {
+    public override void ExitState()
+    {
         Debug.Log("Exited the WAITING state! Robot is moving to standby position...");
     }
 }

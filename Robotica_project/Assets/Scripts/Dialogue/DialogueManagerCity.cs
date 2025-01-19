@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using UnityEngine.EventSystems;
 using System.Collections;
 using UnityEngine.UI;
+using UnityEngine.Assertions.Must;
 
 public class DialogueManagerCity : MonoBehaviour
 {
@@ -59,7 +60,7 @@ public class DialogueManagerCity : MonoBehaviour
             ContinueStory();
         }
         // Gestisce il click destro del mouse
-        if (Input.GetMouseButtonDown(1))
+        if (Input.GetMouseButtonDown(1) || Input.GetKeyDown(KeyCode.M))
         {
             SelectHighlightedChoice();
         }

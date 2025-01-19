@@ -60,7 +60,7 @@ public class DialogueManager : MonoBehaviour
             ContinueStory();
         }
         // Gestisce il click destro del mouse
-        if (Input.GetMouseButtonDown(1))
+        if (Input.GetMouseButtonDown(1) || Input.GetKeyDown(KeyCode.M))
         {
             SelectHighlightedChoice();
         }

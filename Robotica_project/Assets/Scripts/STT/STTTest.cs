@@ -122,7 +122,6 @@ public class STTTest : MonoBehaviour
 
     }
 
-
     public async void Ordering() // Cambiato a public
     {
         // Get robot game object name
@@ -150,6 +149,9 @@ public class STTTest : MonoBehaviour
             .ToList();
 
         Debug.Log("Output: " + output);
+
+        // Exit dialogue mode
+        DialogueManagerOrder.GetInstance().ExitDialogueMode();
 
         // Get dhe BMF of the disabled person
         BlindedPerson blindedPerson = disabledPerson.GetComponent<BlindedPerson>();
@@ -235,7 +237,6 @@ public class STTTest : MonoBehaviour
 
             //lo porta al tavolo
             robotController.SetDestination(new Vector3(-8, 0, 4));
-            DialogueManagerOrder.GetInstance().ExitDialogueMode();
             ttsManager.Speak("Il tuo ordine è stato preso in carico. Andiamo ad accomodarci al tavolo.");
 
             // Aspetta che il robot abbia finito di parlare

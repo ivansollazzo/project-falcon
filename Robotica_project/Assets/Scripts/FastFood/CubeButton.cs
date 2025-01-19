@@ -32,7 +32,7 @@ public class CubeButton : MonoBehaviour
         Debug.Log("Bottone cliccato!");
         DialogueManager dialogueManager = DialogueManager.GetInstance();
         dialogueManager.EnterDialogueMode(inkJSON);
-        TTSManager.Instance.Speak("Benvenuto all' UAITF Fastfood!, cosa vuoi fare? Seleziona il bottone vocal choice e scegli fra voglio entrare e voglio ordinare.");
+        TTSManager.Instance.Speak("Benvenuto all' UAITF Fastfood! Io sono UAITF Robot ed il mio obiettivo è quello di aiutarti a comporre l'ordine più adeguato alle tue esigenze. Cosa vuoi fare? Seleziona il bottone vocal choice e scegli fra voglio entrare e voglio ordinare.");
 
     }
 

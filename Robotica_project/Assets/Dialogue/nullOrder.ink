@@ -1,1 +1,1 @@
-Scelta non valida! Hai superato il fabbisogno calorico giornaliero, Ti consiglio di prendere un pasto più bilanciato scegliendo dai cibi disponibili!
+Mi dispiace, ma hai superato il tuo fabbisogno calorico giornaliero. Il mio obiettivo è quello di proporti dei pasti bilanciati per tenerti in salute, quindi Ti consiglio di rivedere il tuo ordine.

@@ -194,7 +194,7 @@ public class STTTest : MonoBehaviour
         // Se il numero di calorie supera il fabbisogno calorico, avvisa l'utente
         if (totalCalories > bmr)
         {
-            ttsManager.Speak("Mi dispiace, ma hai superato il tuo fabbisogno calorico giornaliero. Ti consiglio di scegliere qualcos'altro.");
+            ttsManager.Speak("Mi dispiace, ma hai superato il tuo fabbisogno calorico giornaliero. Il mio obiettivo è quello di proporti dei pasti bilanciati per tenerti in salute, quindi Ti consiglio di rivedere il tuo ordine.");
             DialogueManagerOrder dialogueManager = DialogueManagerOrder.GetInstance();
             dialogueManager.EnterDialogueMode(inkJSON2);
         }

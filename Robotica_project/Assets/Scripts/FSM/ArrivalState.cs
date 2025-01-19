@@ -16,7 +16,7 @@ public class ArrivalState : State
         TTSManager ttsManager = TTSManager.Instance;
 
         // Speak the arrival message
-        ttsManager.Speak("Sei arrivato a destinazione.");
+        ttsManager.Speak("Sei arrivato a destinazione, l'obiettivo è stato raggiunto con successo.");
 
         //questo deve essere richiamato solo quando sono nella scena di city
         if (stateMachine.gameObject.scene.name == "City")

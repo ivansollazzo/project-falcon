@@ -5,11 +5,11 @@ Course: Robotics and Artificial Intelligence 2
 
 **Institution:** Università degli Studi di Palermo
 
-# 🚀 Project Overview:
+# 🚀 Project Overview
 
 The UAITF Robot is an innovative assistive technology designed to empower visually impaired individuals by enhancing their autonomy and navigation capabilities. Developed as part of an advanced robotics course, the robot blends cutting-edge technology with inclusive design to break barriers and improve quality of life.
 
-# 🌟 Key Features and Achievements:
+# 🌟 Key Features and Achievements
 
 - **Smart Navigation:** Real-time autonomous path planning using the A* algorithm, ensuring safe and efficient movement in dynamic environments.
 - **Advanced Obstacle Detection:** Multi-level Raycast sensors identify obstacles up to 40 cm away, adapting seamlessly to static and moving elements like pedestrians and vehicles.
@@ -18,7 +18,7 @@ The UAITF Robot is an innovative assistive technology designed to empower visual
 - **Contextual Adaptability:** Operates effectively in both urban (City) and indoor (FastFood) environments, with scenario-specific behaviors and user guidance.
 - **Localization Precision:** Incorporates particle filter algorithms to ensure reliable positioning even in uncertain or noisy environments.
 
-# 💡 Technologies Used:
+# 💡 Technologies Used
 
 - **Unity:** High-fidelity simulation and environment modeling.
 - **Sharp3D:** Precision robot design and 3D modeling.
@@ -26,5 +26,5 @@ The UAITF Robot is an innovative assistive technology designed to empower visual
 - **macOS:** Offline voice interaction systems using Neural Engine.
 - **C#:** Core development of control logic and navigation algorithms.
 
-# 🎯 Impact:
+# 🎯 Impact
 The UAITF Robot redefines assistive technology by enabling safe mobility and personalized support, fostering independence and social inclusion for visually impaired users.
